@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GIS Urban Tree Mapping & Green-Cover Assessment</title>
+
+  <!-- Leaflet CSS & Leaflet Draw CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+    crossorigin=""
+  />
+
+  <!-- Global Application Styling -->
+  <link rel="stylesheet" href="./styles/main.css" />
+</head>
+<body>
+
+  <!-- Top Application Navigation Bar -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <span class="brand-icon">🌳</span>
+      <div>
+        <h1 class="brand-title">GIS Urban Tree Mapping</h1>
+        <p class="brand-subtitle">Sentinel-2 Canopy Assessment & Green-Deficit System</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div id="connection-status" class="status-badge">
+        <span class="status-dot"></span>
+        <span id="status-text">Backend Connected</span>
+      </div>
+
+      <button id="btn-draw-aoi" class="btn-primary" title="Draw area polygon on map">
+        <span>✏️</span> Draw AOI
+      </button>
+
+      <button id="btn-clear-aoi" class="btn-secondary" title="Clear drawn layers">
+        <span>🗑️</span> Clear
+      </button>
+
+      <button id="btn-toggle-history" class="btn-secondary" title="Open analysis history drawer">
+        <span>📜</span> History Runs
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive Leaflet Map Canvas -->
+  <div id="map"></div>
+
+  <!-- Floating HUD Dashboard Overlays -->
+  <div class="map-overlays">
+    <!-- Left Column: Statistics & Canopy Breakdown -->
+    <div class="panel-col-left">
+      <div id="stats-panel-container" class="glass-panel">
+        <!-- Rendered by statsPanel.js -->
+      </div>
+    </div>
+
+    <!-- Right Column: Environmental Rule Insights -->
+    <div class="panel-col-right">
+      <div id="insights-panel-container" class="glass-panel">
+        <!-- Rendered by insightsCard.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic NDVI Color Legend -->
+  <div id="legend-container">
+    <!-- Rendered by legend.js -->
+  </div>
+
+  <!-- History Drawer Sidebar -->
+  <aside id="history-drawer" class="history-drawer">
+    <div class="drawer-header">
+      <h3>Analysis History</h3>
+      <button id="btn-close-history" class="btn-secondary">✕</button>
+    </div>
+    <div id="history-list" class="drawer-list">
+      <!-- Rendered by historyDrawer.js -->
+    </div>
+  </aside>
+
+  <!-- Processing Spinner Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Processing Sentinel-2 imagery & calculating NDVI stats...</p>
+  </div>
+
+  <!-- Leaflet and Leaflet Draw Dependencies -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js" crossorigin=""></script>
+
+  <!-- Application Bootstrap Entrypoint -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
+

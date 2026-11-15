@@ -1,0 +1,421 @@
+/* ==========================================================================
+   GIS Urban Tree Mapping & Green-Cover Assessment System - Global Styling
+   ========================================================================== */
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: rgba(30, 41, 59, 0.88);
+  --bg-card-hover: rgba(51, 65, 85, 0.95);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: rgba(148, 163, 184, 0.2);
+  --accent-green: #10b981;
+  --accent-emerald: #059669;
+  --accent-cyan: #06b6d4;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --glass-blur: blur(12px);
+  --transition-fast: 0.2s ease-in-out;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+/* App Header */
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 1000;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  font-size: 24px;
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brand-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background-color: var(--accent-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.btn-primary, .btn-secondary {
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 6px;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background-color: var(--accent-emerald);
+  color: #fff;
+}
+.btn-primary:hover {
+  background-color: #047857;
+}
+
+.btn-secondary {
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+  background-color: var(--bg-card-hover);
+}
+
+/* Main Map Canvas */
+#map {
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* Floating Overlay Panels Container */
+.map-overlays {
+  position: absolute;
+  top: 76px;
+  bottom: 24px;
+  left: 20px;
+  right: 20px;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  z-index: 500;
+}
+
+.panel-col-left, .panel-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 380px;
+  max-width: 90vw;
+  pointer-events: auto;
+}
+
+/* General Panel Card */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow-lg);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-cyan);
+}
+
+/* Stats Panel Metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.metric-item {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.metric-value.highlight-green {
+  color: var(--accent-green);
+}
+
+/* Canopy Density Progress Bar */
+.breakdown-section {
+  margin-top: 12px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #334155;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.progress-fill-dense { background: #1a9850; }
+.progress-fill-moderate { background: #a6d96a; }
+.progress-fill-sparse { background: #d73027; }
+
+/* Insights Cards */
+.insight-alert {
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-left: 4px solid;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.insight-alert.severity-critical {
+  border-left-color: var(--accent-rose);
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.insight-alert.severity-warning {
+  border-left-color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.insight-alert.severity-healthy {
+  border-left-color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.insight-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.insight-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.insight-action {
+  font-size: 11px;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+/* Color Legend */
+.legend-panel {
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-radius: 10px;
+  z-index: 500;
+  width: 280px;
+  pointer-events: auto;
+}
+
+.legend-bar {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #d73027, #f46d43, #fdae61, #fee08b, #d9ef8b, #a6d96a, #66bd63, #1a9850);
+  margin: 8px 0;
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* History Drawer (Sliding Sidebar) */
+.history-drawer {
+  position: fixed;
+  top: 60px;
+  right: -420px;
+  width: 400px;
+  height: calc(100vh - 60px);
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  z-index: 1200;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.history-drawer.open {
+  right: 0;
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.history-item-card:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.05);
+  transform: translateY(-2px);
+}
+
+.history-item-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.history-item-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading-overlay.active {
+  display: flex;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--accent-green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+

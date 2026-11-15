@@ -1,0 +1,21 @@
+# Secrets & Credentials (NEVER commit these)
+.env
+*.env
+gee-private-key.json
+*-private-key.json
+
+# Python Virtual Environment & Cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Frontend Dependencies & Builds
+node_modules/
+dist/
+build/
+
+# IDE & OS Files
+.vscode/
+.DS_Store
+Thumbs.db
