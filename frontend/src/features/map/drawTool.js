@@ -1,27 +1,35 @@
 /**
  * @file drawTool.js
  * @description Manages interactive vector polygon drawing powered by Mapbox GL Draw (v1.4.3)
- * over MapLibre GL JS. Manages geometry capture, GeoJSON extraction, toolbar button states
- * (Draw, Clear, Analyze), and spatial rendering of recalled boundaries from PostGIS.
+ * over MapLibre GL JS, integrated with Turf.js geodesic measurement, spatial guardrails,
+ * reverse geocoding, and toolbar button synchronization.
  */
 
 /* global MapboxDraw */
+import { AoiGeometryEngine } from "./aoiGeometryEngine.js";
 
 export class DrawTool {
   /**
    * @param {Object} map - Active MapLibre map instance
    * @param {Object} [options={}]
-   * @param {Function} [options.onPolygonComplete] - Callback when polygon is drawn
+   * @param {Function} [options.onGeometryChange] - Callback when polygon is drawn, updated, or validated
    * @param {Function} [options.onPolygonClear] - Callback when polygon is cleared
    * @param {Function} [options.onAnalyzeClick] - Callback when Analyze Area button is clicked
    */
   constructor(map, options = {}) {
     this.map = map;
-    this.onPolygonComplete = options.onPolygonComplete || null;
+    this.onGeometryChange = options.onGeometryChange || null;
     this.onPolygonClear = options.onPolygonClear || null;
     this.onAnalyzeClick = options.onAnalyzeClick || null;
+    this.openAnalysisPanel = options.openAnalysisPanel || (() => {
+      if (typeof window !== "undefined" && typeof window.openAnalysisPanel === "function") {
+        window.openAnalysisPanel();
+      }
+    });
 
     this.currentGeometry = null;
+    this.currentValidation = null;
+    this.studyAreaName = "Custom Study Area";
     this.isDrawing = false;
 
     // UI Buttons
@@ -250,8 +258,11 @@ export class DrawTool {
 
     if (this.btnAnalyze) {
       this.btnAnalyze.addEventListener("click", () => {
-        if (this.currentGeometry && this.onAnalyzeClick) {
-          this.onAnalyzeClick(this.currentGeometry);
+        if (this.currentGeometry && this.currentValidation && this.currentValidation.valid && this.onAnalyzeClick) {
+          this.onAnalyzeClick(this.currentGeometry, {
+            validation: this.currentValidation,
+            studyAreaName: this.studyAreaName
+          });
         }
       });
     }
@@ -266,7 +277,8 @@ export class DrawTool {
       this.draw.deleteAll();
     }
     this.currentGeometry = null;
-    this.updateButtonStates(false);
+    this.currentValidation = null;
+    this.updateButtonStates(false, false);
 
     if (this.draw) {
       this.draw.changeMode("draw_polygon");
@@ -306,7 +318,11 @@ export class DrawTool {
   /**
    * Handles draw.create event.
    */
-  handleDrawCreate(e) {
+  async handleDrawCreate(e) {
+    if (typeof this.openAnalysisPanel === "function") {
+      this.openAnalysisPanel();
+    }
+
     const feature = e.features && e.features[0];
     if (!feature) return;
 
@@ -315,36 +331,77 @@ export class DrawTool {
     if (this.btnDraw) {
       this.btnDraw.classList.remove("active");
     }
-    this.updateButtonStates(true);
 
-    if (this.onPolygonComplete && typeof this.onPolygonComplete === "function") {
-      this.onPolygonComplete(this.currentGeometry);
-    }
+    await this.processGeometryUpdate();
   }
 
   /**
    * Handles draw.update event (vertex modifications).
    */
-  handleDrawUpdate(e) {
+  async handleDrawUpdate(e) {
     const feature = e.features && e.features[0];
     if (!feature) return;
 
     this.currentGeometry = feature.geometry;
-    if (this.onPolygonComplete && typeof this.onPolygonComplete === "function") {
-      this.onPolygonComplete(this.currentGeometry);
+    await this.processGeometryUpdate();
+  }
+
+  /**
+   * Validates current geometry, reverse geocodes study name, and fires update callbacks.
+   */
+  async processGeometryUpdate() {
+    if (!this.currentGeometry) return;
+
+    // Run Turf validation and geodesic calculations
+    this.currentValidation = AoiGeometryEngine.validateAndMeasure(this.currentGeometry);
+
+    const hasGeometry = true;
+    const isValid = Boolean(this.currentValidation && this.currentValidation.valid);
+
+    this.updateButtonStates(hasGeometry, isValid);
+
+    // If valid, reverse geocode study area name
+    if (this.currentValidation.metrics && this.currentValidation.metrics.centroid) {
+      const [lng, lat] = this.currentValidation.metrics.centroid;
+      this.studyAreaName = await AoiGeometryEngine.reverseGeocode(lng, lat);
+    }
+
+    if (this.onGeometryChange && typeof this.onGeometryChange === "function") {
+      this.onGeometryChange({
+        geometry: this.currentGeometry,
+        validation: this.currentValidation,
+        metrics: this.currentValidation.metrics,
+        studyAreaName: this.studyAreaName
+      });
+    }
+  }
+
+  /**
+   * Updates study area name from user manual edit.
+   * @param {string} name
+   */
+  setStudyAreaName(name) {
+    if (name && name.trim()) {
+      this.studyAreaName = name.trim();
     }
   }
 
   /**
    * Updates disabled attributes and styles of Clear and Analyze buttons.
    * @param {boolean} hasPolygon
+   * @param {boolean} isValid
    */
-  updateButtonStates(hasPolygon) {
+  updateButtonStates(hasPolygon, isValid) {
     if (this.btnClear) {
       this.btnClear.disabled = !hasPolygon;
     }
     if (this.btnAnalyze) {
-      this.btnAnalyze.disabled = !hasPolygon;
+      this.btnAnalyze.disabled = !isValid;
+      if (isValid) {
+        this.btnAnalyze.classList.add("ready");
+      } else {
+        this.btnAnalyze.classList.remove("ready");
+      }
     }
   }
 
@@ -357,7 +414,9 @@ export class DrawTool {
       this.draw.deleteAll();
     }
     this.currentGeometry = null;
-    this.updateButtonStates(false);
+    this.currentValidation = null;
+    this.studyAreaName = "Custom Study Area";
+    this.updateButtonStates(false, false);
 
     if (this.onPolygonClear && typeof this.onPolygonClear === "function") {
       this.onPolygonClear();
@@ -367,8 +426,13 @@ export class DrawTool {
   /**
    * Renders an external GeoJSON polygon boundary onto the canvas (e.g. from history recall).
    * @param {Object} geoJsonGeometry - GeoJSON Polygon geometry { type: "Polygon", coordinates: [...] }
+   * @param {Object} [options={}] - Custom options like run_label
    */
-  renderPolygon(geoJsonGeometry) {
+  async renderPolygon(geoJsonGeometry, options = {}) {
+    if (typeof this.openAnalysisPanel === "function") {
+      this.openAnalysisPanel();
+    }
+
     this.clear();
 
     const feature = {
@@ -382,7 +446,12 @@ export class DrawTool {
       this.draw.add(feature);
     }
     this.currentGeometry = geoJsonGeometry;
-    this.updateButtonStates(true);
+
+    if (options.run_label) {
+      this.studyAreaName = options.run_label;
+    }
+
+    await this.processGeometryUpdate();
   }
 
   /**
@@ -391,5 +460,13 @@ export class DrawTool {
    */
   getCurrentGeometry() {
     return this.currentGeometry;
+  }
+
+  /**
+   * Returns current validation result and metrics.
+   * @returns {Object|null}
+   */
+  getValidation() {
+    return this.currentValidation;
   }
 }

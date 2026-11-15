@@ -29,6 +29,9 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css" rel="stylesheet" />
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
 
+  <!-- Turf.js for Live Geodesic Area, Perimeter & Geometry Validation -->
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
   <!-- Application Styling -->
   <link rel="stylesheet" href="./styles/main.css" />
 </head>
@@ -156,6 +159,9 @@
             <span>Draw Custom Boundary</span>
           </button>
         </div>
+
+        <!-- AOI Pre-Analysis Diagnostics Card (Phase 2) -->
+        <div id="aoi-card-container" style="display: none;"></div>
 
         <!-- Analysis Results Containers (Phase 2 slots) -->
         <div id="stats-container" class="phase2-slot" style="display: none;"></div>
