@@ -42,7 +42,7 @@ export class MapManager {
       center: this.defaultCenter,
       zoom: this.defaultZoom,
       minZoom: 2,
-      maxZoom: 19,
+      maxZoom: 18,
       attributionControl: false
     });
 
@@ -93,7 +93,7 @@ export class MapManager {
             "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           ],
           tileSize: 256,
-          maxzoom: 19,
+          maxzoom: 17,
           attribution: "Tiles © Esri — Source: Esri, Copernicus Sentinel-2"
         },
         "openfreemap": {
