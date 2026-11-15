@@ -3,103 +3,326 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GIS Urban Tree Mapping & Green-Cover Assessment</title>
+  <title>Urban GreenWatch | Sentinel-2 NDVI Global Assessment</title>
 
-  <!-- Leaflet CSS & Leaflet Draw CSS -->
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
-  />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
-    crossorigin=""
   />
 
-  <!-- Global Application Styling -->
+  <!-- Font Awesome Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- MapLibre GL JS (v4.7.1) -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Mapbox GL Draw (v1.4.3 - Compatible with MapLibre GL) -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.4.3/mapbox-gl-draw.js"></script>
+
+  <!-- Turf.js for Live Geodesic Area, Perimeter & Geometry Validation -->
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+  <!-- Application Styling -->
   <link rel="stylesheet" href="./styles/main.css" />
 </head>
 <body>
 
-  <!-- Top Application Navigation Bar -->
-  <header class="app-header">
-    <div class="brand-wrapper">
-      <span class="brand-icon">🌳</span>
-      <div>
-        <h1 class="brand-title">GIS Urban Tree Mapping</h1>
-        <p class="brand-subtitle">Sentinel-2 Canopy Assessment & Green-Deficit System</p>
-      </div>
+  <!-- ======================================================================
+       1. Full-Width Top Navigation Bar (56px) - Global Nature Watch Style
+       ====================================================================== -->
+  <header class="global-navbar">
+    <!-- Flush Brand Block -->
+    <div class="brand-block" title="Urban GreenWatch GIS">
+      <span class="brand-line-1">URBAN</span>
+      <span class="brand-line-2">GREEN WATCH</span>
     </div>
 
-    <div class="header-actions">
-      <div id="connection-status" class="status-badge">
-        <span class="status-dot"></span>
-        <span id="status-text">Backend Connected</span>
+    <!-- Primary Navigation Links -->
+    <nav class="navbar-nav-links">
+      <button id="nav-btn-map" class="nav-link active" title="Interactive World Map View">
+        MAP
+      </button>
+      <button id="nav-btn-dashboard" class="nav-link" title="Analytics & History Dashboard">
+        DASHBOARD
+      </button>
+      <button id="nav-btn-methodology" class="nav-link" title="Remote Sensing Methodology">
+        METHODOLOGY
+      </button>
+    </nav>
+
+    <!-- Top-Right Search & Action Toolbar -->
+    <div class="navbar-actions">
+      <!-- Location Search Input -->
+      <div class="navbar-search-box">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search any city, region, or coordinates worldwide..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="btn-clear-search" class="btn-search-clear" title="Clear input" style="display: none;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button id="btn-search" class="btn-search-submit" title="Search Location">
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
       </div>
 
-      <button id="btn-draw-aoi" class="btn-primary" title="Draw area polygon on map">
-        <span>✏️</span> Draw AOI
-      </button>
-
-      <button id="btn-clear-aoi" class="btn-secondary" title="Clear drawn layers">
-        <span>🗑️</span> Clear
-      </button>
-
-      <button id="btn-toggle-history" class="btn-secondary" title="Open analysis history drawer">
-        <span>📜</span> History Runs
-      </button>
+      <!-- Polygon Action Buttons -->
+      <div class="navbar-polygon-tools">
+        <button id="btn-draw-polygon" class="toolbar-btn" title="Draw Area of Interest polygon on map">
+          <i class="fa-solid fa-draw-polygon"></i>
+          <span>Draw AOI</span>
+        </button>
+        <button id="btn-clear-polygon" class="toolbar-btn btn-danger" title="Clear drawn polygon" disabled>
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Clear</span>
+        </button>
+        <button id="btn-analyze" class="toolbar-btn btn-cta" title="Run Sentinel-2 NDVI Analysis" disabled>
+          <i class="fa-solid fa-satellite-dish"></i>
+          <span>Analyze Area</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Interactive Leaflet Map Canvas -->
-  <div id="map"></div>
+  <!-- Search Toast Notification -->
+  <div id="search-feedback" class="search-feedback-toast" style="display: none;"></div>
 
-  <!-- Floating HUD Dashboard Overlays -->
-  <div class="map-overlays">
-    <!-- Left Column: Statistics & Canopy Breakdown -->
-    <div class="panel-col-left">
-      <div id="stats-panel-container" class="glass-panel">
-        <!-- Rendered by statsPanel.js -->
+  <!-- ======================================================================
+       2. Map View: Global Interactive Canvas + Left Panel + Controls
+       ====================================================================== -->
+  <main id="map-view" class="view-container active">
+    <!-- Full-Viewport Interactive Map Canvas -->
+    <div id="map"></div>
+
+    <!-- Reopen Sidebar Handle (visible when left panel is collapsed) -->
+    <button id="btn-sidebar-open" class="floating-panel-toggle" title="Open Sidebar">
+      <i class="fa-solid fa-angles-right"></i>
+    </button>
+
+    <!-- Collapsible Left Panel (Width: 370px) -->
+    <aside id="sidebar-panel" class="glass-sidebar">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="sidebar-title-group">
+          <span class="sidebar-badge">SENTINEL-2 L2A</span>
+          <h2 class="sidebar-title">Global Canopy Watch</h2>
+        </div>
+        <button id="btn-sidebar-collapse" class="btn-icon-subtle" title="Collapse sidebar">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+      </div>
+
+      <!-- Two Top Tabs: LEGEND | ANALYSIS -->
+      <div class="sidebar-tabs" role="tablist">
+        <button id="tab-btn-legend" class="tab-button active" role="tab" aria-selected="true">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>LEGEND</span>
+        </button>
+        <button id="tab-btn-analysis" class="tab-button" role="tab" aria-selected="false">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>ANALYSIS</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: LEGEND -->
+      <div id="tab-content-legend" class="tab-pane active" role="tabpanel">
+        <!-- Rendered dynamically by legend.js -->
+      </div>
+
+      <!-- Tab 2: ANALYSIS -->
+      <div id="tab-content-analysis" class="tab-pane" role="tabpanel" style="display: none;">
+        <!-- Empty State Card (Default) -->
+        <div id="analysis-empty-state" class="empty-state-card">
+          <div class="empty-state-icon">
+            <i class="fa-solid fa-draw-polygon"></i>
+          </div>
+          <h3 class="empty-state-title">No AOI Boundary Selected</h3>
+          <p class="empty-state-desc">
+            Select or draw a custom polygon boundary on the map to analyze Sentinel-2 vegetation canopy coverage and compute real-time NDVI indices.
+          </p>
+          <button id="btn-empty-state-draw" class="btn-primary-action">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span>Draw Custom Boundary</span>
+          </button>
+        </div>
+
+        <!-- AOI Pre-Analysis Diagnostics Card (Phase 2) -->
+        <div id="aoi-card-container" style="display: none;"></div>
+
+        <!-- Analysis Results Containers (Phase 2 slots) -->
+        <div id="stats-container" class="phase2-slot" style="display: none;"></div>
+        <div id="insights-container" class="phase2-slot" style="display: none;"></div>
+      </div>
+
+      <!-- Sidebar Status Footer Strip -->
+      <div class="sidebar-footer">
+        <div class="system-status-indicator">
+          <span class="status-pulse-dot"></span>
+          <span id="connection-status-text">Active • 10m Optical Bands</span>
+        </div>
+        <span class="coverage-badge">GLOBAL COVERAGE</span>
+      </div>
+    </aside>
+
+    <!-- Bottom-Right Map Controls Cluster -->
+    <div id="bottom-right-controls" class="map-controls-cluster">
+      <!-- Zoom Controls -->
+      <div class="control-box-group glass-panel">
+        <button id="btn-zoom-in" class="map-ctrl-btn" title="Zoom In">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <div class="map-ctrl-divider"></div>
+        <button id="btn-zoom-out" class="map-ctrl-btn" title="Zoom Out">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+      </div>
+
+      <!-- Live Coordinates & Zoom Readout Box -->
+      <div id="coords-zoom-readout" class="coords-readout-box glass-panel">
+        <span id="readout-zoom">zoom: 2.00</span>
+        <span class="readout-sep">|</span>
+        <span id="readout-coords">lat, lon: 20.00000, 15.00000</span>
       </div>
     </div>
+  </main>
 
-    <!-- Right Column: Environmental Rule Insights -->
-    <div class="panel-col-right">
-      <div id="insights-panel-container" class="glass-panel">
-        <!-- Rendered by insightsCard.js -->
+  <!-- ======================================================================
+       3. Dashboard View: Analytics KPI Cards & PostGIS History Table
+       ====================================================================== -->
+  <section id="dashboard-view" class="view-container" style="display: none;">
+    <div class="dashboard-content-wrapper">
+      <div class="dashboard-header">
+        <div>
+          <h2 class="dashboard-title">Analytics &amp; Spatial History</h2>
+          <p class="dashboard-subtitle">
+            Saved Sentinel-2 analysis runs, canopy cover statistics, and spatial polygons from Supabase PostGIS.
+          </p>
+        </div>
+        <button id="btn-dashboard-back-map" class="btn-primary-action compact">
+          <i class="fa-solid fa-earth-americas"></i>
+          <span>Back to Map</span>
+        </button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card glass-panel">
+          <div class="kpi-label">Total Analyses Recorded</div>
+          <div id="kpi-total-runs" class="kpi-value">0</div>
+          <div class="kpi-trend"><i class="fa-solid fa-chart-line"></i> PostGIS Spatial Runs</div>
+        </div>
+
+        <div class="kpi-card glass-panel">
+          <div class="kpi-label">Average Green Cover</div>
+          <div id="kpi-avg-green" class="kpi-value highlight-green">--%</div>
+          <div class="kpi-trend">NDVI &ge; 0.30 Threshold</div>
+        </div>
+
+        <div class="kpi-card glass-panel">
+          <div class="kpi-label">Average Mean NDVI</div>
+          <div id="kpi-avg-ndvi" class="kpi-value highlight-cyan">--</div>
+          <div class="kpi-trend">Global Standard (-1 to +1)</div>
+        </div>
+
+        <div class="kpi-card glass-panel">
+          <div class="kpi-label">Total Hectares Analyzed</div>
+          <div id="kpi-total-area" class="kpi-value">-- ha</div>
+          <div class="kpi-trend">Calculated AOI Surface</div>
+        </div>
+      </div>
+
+      <!-- Spatial History Table Container -->
+      <div class="dashboard-table-section glass-panel">
+        <div class="table-section-header">
+          <h3>Saved Spatial Analyses</h3>
+          <span class="table-caption">Click any run row or "Explore on Map" to fly to the polygon.</span>
+        </div>
+        <div id="history-table-container">
+          <!-- Populated dynamically by historyDrawer.js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================================
+       4. Methodology & About Modal Dialog
+       ====================================================================== -->
+  <div id="about-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-circle-nodes modal-icon"></i>
+          <h2>Methodology &amp; Satellite Remote Sensing</h2>
+        </div>
+        <button id="btn-close-about" class="btn-icon-subtle" title="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <section class="modal-section">
+          <h3><i class="fa-solid fa-satellite"></i> Sentinel-2 Surface Reflectance (L2A)</h3>
+          <p>
+            The system processes high-resolution multispectral observations captured by the European Space Agency's 
+            <strong>Copernicus Sentinel-2 constellation</strong> at 10-meter spatial resolution. Cloud and cirrus pixels 
+            are filtered using the <strong>QA60 cloud-masking bitmask</strong> to guarantee surface radiance accuracy.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3><i class="fa-solid fa-calculator"></i> Deterministic NDVI Formula</h3>
+          <p>
+            The <strong>Normalized Difference Vegetation Index (NDVI)</strong> quantifies vegetation canopy density by comparing 
+            Near-Infrared (NIR) reflectance to Red visible light absorption:
+          </p>
+          <div class="formula-box">
+            <code>NDVI = (Band 8 NIR - Band 4 Red) / (Band 8 NIR + Band 4 Red)</code>
+          </div>
+          <p class="formula-note">
+            Where <strong>Band 8 (NIR)</strong> corresponds to 842 nm and <strong>Band 4 (Red)</strong> corresponds to 665 nm.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3><i class="fa-solid fa-tree"></i> Canopy Cover vs. Individual Stems</h3>
+          <p>
+            Optical satellite sensing evaluates <strong>aggregate tree canopy coverage and vegetative density</strong> across 
+            each 10m &times; 10m ground pixel. The system maps broad leaf foliage, green cover percentage, and canopy health 
+            rather than identifying individual tree stems or trunks.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3><i class="fa-solid fa-shield-halved"></i> Urban Forestry Benchmarks</h3>
+          <p>
+            Analyzed boundaries are algorithmically compared against the <strong>WHO 30% urban canopy guideline</strong>, 
+            identifying municipal green deficits and calculating planting requirements (~400 shade trees per hectare of deficit).
+          </p>
+        </section>
+      </div>
+
+      <div class="modal-footer">
+        <span class="modal-footer-caption">GIS Urban Tree Mapping System • Global Nature Watch Alignment</span>
+        <button id="btn-modal-dismiss" class="btn-primary-action compact">Got It</button>
       </div>
     </div>
   </div>
-
-  <!-- Dynamic NDVI Color Legend -->
-  <div id="legend-container">
-    <!-- Rendered by legend.js -->
-  </div>
-
-  <!-- History Drawer Sidebar -->
-  <aside id="history-drawer" class="history-drawer">
-    <div class="drawer-header">
-      <h3>Analysis History</h3>
-      <button id="btn-close-history" class="btn-secondary">✕</button>
-    </div>
-    <div id="history-list" class="drawer-list">
-      <!-- Rendered by historyDrawer.js -->
-    </div>
-  </aside>
-
-  <!-- Processing Spinner Overlay -->
-  <div id="loading-overlay" class="loading-overlay">
-    <div class="spinner"></div>
-    <p>Processing Sentinel-2 imagery & calculating NDVI stats...</p>
-  </div>
-
-  <!-- Leaflet and Leaflet Draw Dependencies -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js" crossorigin=""></script>
 
   <!-- Application Bootstrap Entrypoint -->
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
-

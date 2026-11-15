@@ -6,28 +6,10 @@
 
 export class InsightsCard {
   /**
-   * @param {string} containerId - Target DOM element ID
+   * @param {string} [containerId="insights-container"] - Target DOM element ID
    */
-  constructor(containerId = "insights-panel-container") {
+  constructor(containerId = "insights-container") {
     this.container = document.getElementById(containerId);
-    this.renderPlaceholder();
-  }
-
-  /**
-   * Initial placeholder prior to polygon submission.
-   */
-  renderPlaceholder() {
-    if (!this.container) return;
-
-    this.container.innerHTML = `
-      <div class="panel-header">
-        <span class="panel-title">Environmental Insights</span>
-      </div>
-      <p style="font-size: 13px; color: #94a3b8; line-height: 1.5;">
-        Deterministic ecological rules evaluate urban heat island risk and tree canopy
-        deficits once an AOI is analyzed.
-      </p>
-    `;
   }
 
   /**
@@ -37,52 +19,77 @@ export class InsightsCard {
   update(report) {
     if (!this.container || !report) return;
 
+    this.container.style.display = "block";
+
     const recommendations = report.recommendations || [];
 
     const recsHtml = recommendations
-      .map((item) => `
-        <div class="insight-alert severity-${item.severity}">
-          <div class="insight-title">${item.title}</div>
+      .map(
+        (item) => `
+        <div class="insight-alert severity-${item.severity || 'moderate'}">
+          <div class="insight-title-row">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span class="insight-title">${item.title}</span>
+          </div>
           <div class="insight-desc">${item.description}</div>
-          <div class="insight-action">💡 Action: ${item.suggested_action}</div>
+          <div class="insight-action"><strong>Recommended Action:</strong> ${item.suggested_action}</div>
         </div>
-      `)
+      `
+      )
       .join("");
 
     this.container.innerHTML = `
-      <div class="panel-header">
-        <span class="panel-title">Ecological Diagnostics</span>
-        <span class="status-badge" style="font-size: 11px;">Score: ${report.health_score}/100</span>
-      </div>
-
-      <div style="margin-bottom: 14px;">
-        <div style="font-size: 15px; font-weight: 700; color: #f8fafc; margin-bottom: 4px;">
-          ${report.overall_health_status}
+      <div class="insights-panel-card glass-panel">
+        <div class="panel-header">
+          <div class="panel-header-title">
+            <i class="fa-solid fa-shield-heart"></i>
+            <span class="panel-title">Ecological Diagnostics</span>
+          </div>
+          <span class="status-badge badge-health">Health: ${report.health_score ?? 70}/100</span>
         </div>
-        <div style="font-size: 12px; color: #94a3b8;">
-          Cooling Rating: <strong style="color: #38bdf8;">${report.cooling_capacity_index}</strong>
-        </div>
-      </div>
 
-      <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-        <div class="metric-item" style="flex: 1; padding: 8px 12px;">
-          <div class="metric-label" style="font-size: 10px;">Green Deficit</div>
-          <div style="font-size: 16px; font-weight: 700; color: #f43f5e;">
-            ${report.green_deficit_hectares} ha
+        <div class="health-summary-row">
+          <div class="health-status-text">${report.overall_health_status || "Moderate Canopy Density"}</div>
+          <div class="cooling-rating-text">
+            Cooling Rating: <strong class="highlight-cyan">${report.cooling_capacity_index || "Moderate"}</strong>
           </div>
         </div>
-        <div class="metric-item" style="flex: 1; padding: 8px 12px;">
-          <div class="metric-label" style="font-size: 10px;">Planting Target</div>
-          <div style="font-size: 16px; font-weight: 700; color: #10b981;">
-            ~${report.estimated_trees_needed} trees
+
+        <div class="deficit-grid">
+          <div class="metric-item deficit-item">
+            <div class="metric-label">Green Deficit</div>
+            <div class="deficit-val highlight-rose">
+              ${report.green_deficit_hectares !== undefined ? report.green_deficit_hectares : "0.0"} ha
+            </div>
+            <div class="metric-sub">vs WHO 30% Guideline</div>
+          </div>
+
+          <div class="metric-item target-item">
+            <div class="metric-label">Planting Target</div>
+            <div class="target-val highlight-green">
+              ~${(report.estimated_trees_needed || 0).toLocaleString()} trees
+            </div>
+            <div class="metric-sub">~400 trees / ha</div>
           </div>
         </div>
-      </div>
 
-      <div class="recommendations-list">
-        ${recsHtml || '<p style="font-size: 12px; color: #94a3b8;">No immediate interventions needed.</p>'}
+        <div class="recommendations-container">
+          <div class="recommendations-header">Actionable Urban Interventions</div>
+          <div class="recommendations-list">
+            ${recsHtml || '<p class="no-recs-note">Current canopy meets local ecological standards.</p>'}
+          </div>
+        </div>
       </div>
     `;
   }
-}
 
+  /**
+   * Hides the insights container.
+   */
+  clear() {
+    if (this.container) {
+      this.container.style.display = "none";
+      this.container.innerHTML = "";
+    }
+  }
+}
