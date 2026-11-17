@@ -72,6 +72,7 @@ def process_ndvi_analysis(request: AnalyzeRequest) -> AnalyzeResponse:
         satellite=gee_result["satellite"],
         ndvi_tile_url=gee_result["ndvi_tile_url"],
         rgb_tile_url=gee_result["rgb_tile_url"],
+        rgb_thumb_url=gee_result.get("rgb_thumb_url"),
         stats=zonal_stats,
         total_area_hectares=round(total_ha, 2),
         total_area_sq_meters=round(total_sqm, 2),

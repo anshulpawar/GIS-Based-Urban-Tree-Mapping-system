@@ -39,9 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         ndviLayers.setOpacity(0.0);
       }
-    },
-    onModeChange: (mode) => {
-      ndviLayers.setMode(mode);
     }
   });
   legend.render();
@@ -90,6 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear previous analysis results if geometry changed
       statsPanel.clear();
       insightsCard.clear();
+      legend.clearPreview();
       ndviLayers.removeCurrentLayer();
 
       // Automatically open sidebar and switch to ANALYSIS tab
@@ -108,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
       aoiCard.render(null);
       statsPanel.clear();
       insightsCard.clear();
+      legend.clearPreview();
       ndviLayers.removeCurrentLayer();
     },
     onAnalyzeClick: (geometry, info) => {
@@ -162,21 +161,23 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("No analysis data could be computed.");
       }
 
-      // 1. Mount dynamic dual-mode Sentinel-2 layer (NDVI / True-Color)
+      // 1. Mount dynamic NDVI layer strictly on the map canvas
       const ndviUrl = analysisResult.ndvi_tile_url || analysisResult.tile_url_template;
-      const rgbUrl = analysisResult.rgb_tile_url || null;
+      ndviLayers.setNdviLayer(ndviUrl, legend.currentOpacity / 100.0);
 
-      ndviLayers.setLayerUrls({
-        ndviTileUrl: ndviUrl,
-        rgbTileUrl: rgbUrl,
-        opacity: legend.currentOpacity / 100.0,
-        mode: legend.currentMode || "ndvi"
+      // 2. Pass static optical satellite preview to the Legend panel
+      const thumbUrl = analysisResult.rgb_thumb_url || null;
+      legend.setSatellitePreview({
+        thumbUrl: thumbUrl,
+        acquisitionDate: analysisResult.acquisition_date,
+        satellite: analysisResult.satellite,
+        areaName: studyAreaName
       });
 
-      // 2. Render Canopy Statistics Panel
+      // 3. Render Canopy Statistics Panel
       statsPanel.update(analysisResult);
 
-      // 3. Render Ecological Diagnostics Card
+      // 4. Render Ecological Diagnostics Card
       if (analysisResult.insights_summary) {
         insightsCard.update(analysisResult.insights_summary);
       }
@@ -273,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
       satellite: "Sentinel-2 L2A (10m Simulated)",
       ndvi_tile_url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       rgb_tile_url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      rgb_thumb_url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=640&q=80",
       stats: {
         mean_ndvi: meanNdvi,
         green_cover_pct: greenCoverPct,

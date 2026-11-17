@@ -216,7 +216,7 @@ def analyze_sentinel2_aoi(
             # Create cloud-masked median composite strictly clipped to the AOI polygon
             composite = s2_collection.map(mask_s2_scl).median().clip(ee_geom)
 
-            # 1. True-Color (RGB) XYZ Tile Generation
+            # 1. True-Color (RGB) Visual Composite & Static 640px Thumbnail Generation
             # Sentinel-2 bands: B4 (Red), B3 (Green), B2 (Blue)
             # Use string-formatted visualization values to ensure compatibility with earthengine-api 1.7.52
             rgb_viz = {
@@ -227,6 +227,22 @@ def analyze_sentinel2_aoi(
             }
             rgb_map_id = composite.getMapId(rgb_viz)
             rgb_tile_url = rgb_map_id["tile_fetcher"].url_format
+
+            # Generate high-clarity static 640px PNG preview snapshot via getThumbURL()
+            try:
+                rgb_visual = (
+                    composite
+                    .visualize(bands=["B4", "B3", "B2"], min=0, max=3000, gamma=1.25)
+                    .clip(ee_geom)
+                )
+                rgb_thumb_url = rgb_visual.getThumbURL({
+                    "region": ee_geom.bounds(),
+                    "dimensions": 640,
+                    "format": "png"
+                })
+            except Exception as thumb_err:
+                logger.warning("Could not generate GEE thumbnail: %s", thumb_err)
+                rgb_thumb_url = None
 
             # 2. Deterministic NDVI Band Arithmetic: (B8 - B4) / (B8 + B4)
             ndvi = composite.normalizedDifference(["B8", "B4"]).rename("NDVI")
@@ -300,6 +316,7 @@ def analyze_sentinel2_aoi(
                 "satellite": "Sentinel-2 L2A (10m)",
                 "ndvi_tile_url": ndvi_tile_url,
                 "rgb_tile_url": rgb_tile_url,
+                "rgb_thumb_url": rgb_thumb_url,
                 "stats": {
                     "mean_ndvi": mean_ndvi,
                     "green_cover_pct": green_cover_pct,
@@ -331,6 +348,7 @@ def analyze_sentinel2_aoi(
         "satellite": "Sentinel-2 L2A (10m Simulated)",
         "ndvi_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "rgb_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "rgb_thumb_url": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=640&q=80",
         "stats": {
             "mean_ndvi": 0.448,
             "green_cover_pct": 61.2,

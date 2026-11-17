@@ -104,6 +104,7 @@ class AnalyzeResponse(BaseModel):
     satellite: str = Field(default="Sentinel-2 L2A (10m)", description="Satellite mission and optical resolution")
     ndvi_tile_url: str = Field(..., description="MapLibre XYZ raster tile URL for 4-tier discrete NDVI heatmap")
     rgb_tile_url: str = Field(..., description="MapLibre XYZ raster tile URL for True-Color Sentinel-2 RGB composite")
+    rgb_thumb_url: Optional[str] = Field(default=None, description="Static 640px optical satellite capture preview URL")
     stats: ZonalStats = Field(..., description="Comprehensive zonal statistics")
     total_area_hectares: float = Field(..., description="Calculated area of polygon in hectares")
     total_area_sq_meters: float = Field(..., description="Calculated area of polygon in square meters")
