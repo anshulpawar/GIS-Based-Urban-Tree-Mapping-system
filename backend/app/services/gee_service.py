@@ -346,3 +346,4 @@ def analyze_sentinel2_aoi(
         "total_area_sq_meters": round(sq_meters, 2) if sq_meters > 0 else 185000.0,
         "is_simulated": True
     }
+
