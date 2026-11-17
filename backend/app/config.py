@@ -7,8 +7,12 @@ service credentials, and API server settings.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE_PATH = BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -25,13 +29,16 @@ class Settings(BaseSettings):
     # Supabase PostGIS Configuration
     SUPABASE_URL: str = "https://placeholder-project.supabase.co"
     SUPABASE_KEY: str = "placeholder-key"
+    SUPABASE_SECRET_KEY: Optional[str] = None
 
     # Google Earth Engine (GEE) Service Account Credentials
     GEE_SERVICE_ACCOUNT: Optional[str] = None
-    GEE_PRIVATE_KEY_FILE: Optional[str] = None
+    GEE_PRIVATE_KEY_FILE: Optional[str] = "gee-private-key.json"
+    GEE_PRIVATE_KEY_PATH: Optional[str] = None
+    GEE_PROJECT_ID: Optional[str] = "urban-tree-mapping"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE_PATH) if ENV_FILE_PATH.exists() else ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

@@ -27,16 +27,20 @@ export async function checkSystemHealth() {
 }
 
 /**
- * Submits an AOI polygon geometry to Google Earth Engine for NDVI processing.
+ * Submits an AOI polygon geometry to Google Earth Engine for NDVI and True-Color processing.
  * @param {Object} geoJsonPolygon - GeoJSON Polygon geometry { type: "Polygon", coordinates: [...] }
- * @param {Object} [options={}] - Optional filters (run_label, cloud_threshold_pct, start_date, end_date)
- * @returns {Promise<Object>} Computed NDVI stats and tile overlay URL
+ * @param {Object} [options={}] - Optional filters and metrics (name, run_label, area_sqkm, area_ha, perimeter_km, cloud_threshold_pct, start_date, end_date)
+ * @returns {Promise<Object>} Computed NDVI stats, ndvi_tile_url, and rgb_tile_url
  */
 export async function submitAnalyzeRequest(geoJsonPolygon, options = {}) {
   const payload = {
     geometry: geoJsonPolygon,
-    run_label: options.run_label || `Analysis Run ${new Date().toLocaleTimeString()}`,
-    cloud_threshold_pct: options.cloud_threshold_pct ?? 20.0,
+    name: options.name || options.run_label || `Analysis Run ${new Date().toLocaleTimeString()}`,
+    run_label: options.run_label || options.name || `Analysis Run ${new Date().toLocaleTimeString()}`,
+    area_sqkm: options.area_sqkm ?? null,
+    area_ha: options.area_ha ?? null,
+    perimeter_km: options.perimeter_km ?? null,
+    cloud_threshold_pct: options.cloud_threshold_pct ?? 25.0,
     start_date: options.start_date || null,
     end_date: options.end_date || null
   };
