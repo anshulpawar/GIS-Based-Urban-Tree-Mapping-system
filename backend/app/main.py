@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.features.analyze.router import router as analyze_router
 from app.features.history.router import router as history_router
+from app.services.gee_service import get_gee_status, initialize_earth_engine
 
 settings = get_settings()
 
@@ -30,16 +31,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+async def startup_event():
+    """Attempt background initialization of Earth Engine on startup."""
+    initialize_earth_engine()
+
+
 # Health check route
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     """
-    Health check endpoint returning system status and service name.
+    Health check endpoint returning system status, GEE connection status, and service name.
     """
+    gee_info = get_gee_status()
     return {
-        "status": "ok",
-        "system": "Urban Tree Mapping & Green-Cover Assessment"
+        "status": "ok" if gee_info.get("gee_initialized") else "degraded",
+        "system": "Urban Tree Mapping & Green-Cover Assessment",
+        **gee_info
     }
+
 
 # Mount feature routers under API prefix
 app.include_router(analyze_router, prefix="/api")

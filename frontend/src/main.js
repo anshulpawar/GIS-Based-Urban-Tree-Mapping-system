@@ -39,6 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         ndviLayers.setOpacity(0.0);
       }
+    },
+    onModeChange: (mode) => {
+      ndviLayers.setMode(mode);
     }
   });
   legend.render();
@@ -131,15 +134,25 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       let analysisResult = null;
 
+      const rawMetrics = validation.metrics || (currentAoiState && currentAoiState.metrics) || {};
+      const areaHa = rawMetrics.areaHectares || null;
+      const areaSqKm = rawMetrics.areaKm2 || (areaHa ? areaHa / 100 : null);
+      const perimeterKm = rawMetrics.perimeterKm || null;
+
       try {
         // Attempt backend analysis request
         analysisResult = await submitAnalyzeRequest(geometry, {
-          run_label: studyAreaName
+          name: studyAreaName,
+          run_label: studyAreaName,
+          area_sqkm: areaSqKm,
+          area_ha: areaHa,
+          perimeter_km: perimeterKm
         });
       } catch (backendErr) {
         console.warn("Backend API unavailable or error:", backendErr);
         // Fallback to high-fidelity local GIS simulation
         analysisResult = generateSimulatedAnalysis(geometry, {
+          name: studyAreaName,
           run_label: studyAreaName,
           validation
         });
@@ -149,10 +162,16 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("No analysis data could be computed.");
       }
 
-      // 1. Mount dynamic NDVI layer
-      if (analysisResult.tile_url_template) {
-        ndviLayers.setNdviLayer(analysisResult.tile_url_template);
-      }
+      // 1. Mount dynamic dual-mode Sentinel-2 layer (NDVI / True-Color)
+      const ndviUrl = analysisResult.ndvi_tile_url || analysisResult.tile_url_template;
+      const rgbUrl = analysisResult.rgb_tile_url || null;
+
+      ndviLayers.setLayerUrls({
+        ndviTileUrl: ndviUrl,
+        rgbTileUrl: rgbUrl,
+        opacity: legend.currentOpacity / 100.0,
+        mode: legend.currentMode || "ndvi"
+      });
 
       // 2. Render Canopy Statistics Panel
       statsPanel.update(analysisResult);
@@ -246,9 +265,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const coolingIndex = healthScore >= 75 ? "Optimal" : healthScore >= 50 ? "Moderate" : "Deficient";
 
     return {
+      status: "success",
       analysis_id: "sim-" + Date.now(),
+      area_name: runLabel,
       run_label: runLabel,
       acquisition_date: new Date().toISOString().split("T")[0] + " (Sentinel-2 L2A)",
+      satellite: "Sentinel-2 L2A (10m Simulated)",
+      ndvi_tile_url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      rgb_tile_url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      stats: {
+        mean_ndvi: meanNdvi,
+        green_cover_pct: greenCoverPct,
+        dense_pct: densePct,
+        moderate_pct: modPct,
+        sparse_pct: Math.round(sparsePct * 0.45),
+        non_veg_pct: Math.round(sparsePct * 0.55),
+        area_ha: parseFloat(areaHa.toFixed(2)),
+        area_sqkm: parseFloat((areaHa / 100).toFixed(3)),
+        pixel_count: Math.round(areaSqM / 100)
+      },
       total_area_hectares: parseFloat(areaHa.toFixed(2)),
       total_area_sq_meters: Math.round(areaSqM),
       mean_ndvi: meanNdvi,
@@ -259,6 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sparse_or_built_pct: sparsePct
       },
       tile_url_template: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      is_simulated: true,
       insights_summary: {
         health_score: healthScore,
         overall_health_status: healthScore >= 60 ? "Healthy Urban Canopy" : "Urban Canopy Deficit Detected",
