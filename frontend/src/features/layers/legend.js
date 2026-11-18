@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file legend.js
  * @description Renders the Global Nature Watch styled NDVI vegetation density scale,
  * interactive 4-tier canopy class isolation spotlights, layer opacity controls,
@@ -212,6 +212,7 @@ export class LegendControl {
                 id="input-compare-date" 
                 class="temporal-date-input" 
                 value="${defaultDate}"
+                min="2017-04-01"
                 max="${new Date().toISOString().split('T')[0]}"
               />
               <button 
@@ -528,16 +529,26 @@ export class LegendControl {
       </div>
     `;
 
+    // Store resolved URLs as instance state for layer switcher
+    this._compareCurrentUrl = res.current_tile_url || (this.analysisData && this.analysisData.ndvi_tile_url) || null;
+    this._compareHistUrl = res.historical_tile_url || null;
+    this._compareChangeUrl = res.change_tile_url || res.delta_tile_url || null;
+
     // Bind layer switcher button events
     const btnCurr = document.getElementById("btn-layer-current");
     const btnHist = document.getElementById("btn-layer-historical");
     const btnDelta = document.getElementById("btn-layer-delta");
 
-    const handleSwitch = (mode, tileUrl) => {
+    const handleSwitch = (mode) => {
       this.activeCompareLayer = mode;
       [btnCurr, btnHist, btnDelta].forEach((btn) => {
         if (btn) btn.classList.toggle("active", btn.dataset.mode === mode);
       });
+
+      let tileUrl = null;
+      if (mode === "current") tileUrl = this._compareCurrentUrl;
+      else if (mode === "historical") tileUrl = this._compareHistUrl;
+      else if (mode === "delta") tileUrl = this._compareChangeUrl;
 
       if (this.onCompareLayerChange && typeof this.onCompareLayerChange === "function") {
         this.onCompareLayerChange(mode, tileUrl);
@@ -545,22 +556,19 @@ export class LegendControl {
     };
 
     if (btnCurr) {
-      btnCurr.addEventListener("click", () => {
-        handleSwitch("current", (this.analysisData && this.analysisData.ndvi_tile_url) || null);
-      });
+      btnCurr.addEventListener("click", () => handleSwitch("current"));
     }
 
     if (btnHist) {
-      btnHist.addEventListener("click", () => {
-        handleSwitch("historical", res.historical_tile_url || null);
-      });
+      btnHist.addEventListener("click", () => handleSwitch("historical"));
     }
 
     if (btnDelta) {
-      btnDelta.addEventListener("click", () => {
-        handleSwitch("delta", res.delta_tile_url || null);
-      });
+      btnDelta.addEventListener("click", () => handleSwitch("delta"));
     }
+
+    // Auto-activate Δ Map immediately after results load
+    handleSwitch("delta");
   }
 
   /**

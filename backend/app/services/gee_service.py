@@ -392,6 +392,11 @@ def compare_sentinel2_temporal(
 
             ee_geom = ee.Geometry.Polygon(coordinates)
 
+            # 0. Clamp historical date to Sentinel-2 L2A era start (2017-03-28)
+            SENTINEL2_L2A_START = "2017-03-28"
+            if historical_date < SENTINEL2_L2A_START:
+                historical_date = "2017-04-15"
+
             # 1. Parse historical date & search window (+/- 45 days)
             try:
                 hist_dt = datetime.strptime(historical_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -527,15 +532,22 @@ def compare_sentinel2_temporal(
             else:
                 loss_pct, stable_pct, gain_pct = 8.5, 78.0, 13.5
 
-            # 5. Delta Visualization Map
-            delta_vis = delta.visualize(
-                min=-0.4,
-                max=0.4,
-                palette=["#dc2626", "#f87171", "#f3f4f6", "#4ade80", "#16a34a"]
+            # 5. Current 4-tier classified tile URL (same palette as main NDVI heatmap)
+            curr_classified = (
+                ee.Image(1)
+                .where(curr_ndvi.gte(0.20).And(curr_ndvi.lt(0.40)), 2)
+                .where(curr_ndvi.gte(0.40).And(curr_ndvi.lt(0.60)), 3)
+                .where(curr_ndvi.gte(0.60), 4)
+                .updateMask(curr_ndvi.mask())
             )
-            delta_tile_url = delta_vis.getMapId()["tile_fetcher"].url_format
+            curr_map_id = curr_classified.getMapId({
+                "min": "1",
+                "max": "4",
+                "palette": ["#dc2626", "#f59e0b", "#65a30d", "#16a34a"]
+            })
+            current_tile_url = curr_map_id["tile_fetcher"].url_format
 
-            # Historical 4-tier discrete NDVI tile URL
+            # 6. Historical 4-tier classified tile URL (same palette as current)
             hist_classified = (
                 ee.Image(1)
                 .where(hist_ndvi.gte(0.20).And(hist_ndvi.lt(0.40)), 2)
@@ -546,9 +558,23 @@ def compare_sentinel2_temporal(
             hist_map_id = hist_classified.getMapId({
                 "min": "1",
                 "max": "4",
-                "palette": ["#d73027", "#fdae61", "#66bd63", "#1a9850"]
+                "palette": ["#dc2626", "#f59e0b", "#65a30d", "#16a34a"]
             })
             historical_tile_url = hist_map_id["tile_fetcher"].url_format
+
+            # 7. Discrete 3-class change map: 1=Loss, 2=Stable, 3=Gain
+            change_classified = (
+                ee.Image(2)  # default = Stable
+                .where(delta.lt(-0.08), 1)   # Loss
+                .where(delta.gt(0.08), 3)    # Gain
+                .updateMask(delta.mask())
+            )
+            change_map_id = change_classified.getMapId({
+                "min": "1",
+                "max": "3",
+                "palette": ["#ef4444", "#64748b", "#10b981"]
+            })
+            change_tile_url = change_map_id["tile_fetcher"].url_format
 
             return {
                 "status": "success",
@@ -561,8 +587,10 @@ def compare_sentinel2_temporal(
                 "gain_pct": gain_pct,
                 "loss_pct": loss_pct,
                 "stable_pct": stable_pct,
-                "delta_tile_url": delta_tile_url,
+                "current_tile_url": current_tile_url,
                 "historical_tile_url": historical_tile_url,
+                "change_tile_url": change_tile_url,
+                "delta_tile_url": change_tile_url,  # backward-compat alias
                 "is_simulated": False
             }
 
@@ -581,8 +609,10 @@ def compare_sentinel2_temporal(
         "gain_pct": 14.8,
         "loss_pct": 5.4,
         "stable_pct": 79.8,
-        "delta_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "current_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "historical_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "change_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "delta_tile_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         "is_simulated": True
     }
 
