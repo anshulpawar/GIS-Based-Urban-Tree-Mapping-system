@@ -63,6 +63,9 @@ export class LegendControl {
     this.compareData = null;
     this.activeSpotlight = null;
     this.activeCompareLayer = "current";
+    this._compareCurrentUrl = null;
+    this._compareHistUrl = null;
+    this._compareChangeUrl = null;
 
     this.resetSpotlightUI();
     this.resetTierPercentages();
@@ -212,7 +215,7 @@ export class LegendControl {
                 id="input-compare-date" 
                 class="temporal-date-input" 
                 value="${defaultDate}"
-                min="2017-04-01"
+                min="2015-07-01"
                 max="${new Date().toISOString().split('T')[0]}"
               />
               <button 
@@ -256,6 +259,10 @@ export class LegendControl {
         this.currentOpacity = val;
         opacityBadge.textContent = `${val}%`;
 
+        if (!this.analysisData || !this.analysisData.ndvi_tile_url || !this.currentGeometry) {
+          return;
+        }
+
         if (this.onOpacityChange && typeof this.onOpacityChange === "function") {
           this.onOpacityChange(val / 100.0);
         }
@@ -267,6 +274,10 @@ export class LegendControl {
     const visibilityIcon = document.getElementById("layer-visibility-icon");
     if (visibilityBtn && visibilityIcon) {
       visibilityBtn.addEventListener("click", () => {
+        if (!this.analysisData || !this.analysisData.ndvi_tile_url || !this.currentGeometry) {
+          return;
+        }
+
         this.isVisible = !this.isVisible;
         visibilityIcon.className = this.isVisible ? "fa-solid fa-eye" : "fa-solid fa-eye-slash";
         visibilityBtn.style.color = this.isVisible ? "var(--text-muted)" : "var(--accent-rose)";
@@ -320,8 +331,8 @@ export class LegendControl {
    * @param {string} tierKey
    */
   handleTierSpotlightClick(tierKey) {
-    if (!this.analysisData) {
-      // Still allow toggling if layer is loaded
+    if (!this.analysisData || !this.analysisData.ndvi_tile_url || !this.currentGeometry) {
+      return;
     }
 
     let newlyActive = null;
@@ -340,10 +351,13 @@ export class LegendControl {
    */
   handleResetSpotlight() {
     this.activeSpotlight = null;
+    this.resetSpotlightUI();
+    if (!this.analysisData || !this.analysisData.ndvi_tile_url || !this.currentGeometry) {
+      return;
+    }
     if (this.onResetToFull && typeof this.onResetToFull === "function") {
       this.onResetToFull();
     }
-    this.resetSpotlightUI();
   }
 
   /**
@@ -394,6 +408,11 @@ export class LegendControl {
    */
   async executeTemporalComparison() {
     if (this.isComparing) return;
+
+    if (!this.analysisData || !this.analysisData.ndvi_tile_url || !this.currentGeometry) {
+      alert("Please draw and analyze an Area of Interest first.");
+      return;
+    }
 
     const dateInput = document.getElementById("input-compare-date");
     const btnCompare = document.getElementById("btn-run-temporal-compare");
@@ -540,6 +559,9 @@ export class LegendControl {
     const btnDelta = document.getElementById("btn-layer-delta");
 
     const handleSwitch = (mode) => {
+      if (!this.analysisData || !this.analysisData.ndvi_tile_url || !this.currentGeometry) {
+        return;
+      }
       this.activeCompareLayer = mode;
       [btnCurr, btnHist, btnDelta].forEach((btn) => {
         if (btn) btn.classList.toggle("active", btn.dataset.mode === mode);

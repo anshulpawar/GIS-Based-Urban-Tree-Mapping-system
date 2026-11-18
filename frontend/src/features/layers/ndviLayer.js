@@ -42,6 +42,10 @@ export class NdviLayerManager {
    * @returns {string|null} The newly active classKey, or null if restored to full heatmap.
    */
   spotlightClass(classKey) {
+    if (!this.fullTileUrl && !this.ndviTileUrl) {
+      return null;
+    }
+
     if (!classKey || classKey === this.activeSpotlight) {
       // Toggle off -> restore full heatmap
       this.activeSpotlight = null;
@@ -69,7 +73,9 @@ export class NdviLayerManager {
     this.activeSpotlight = null;
     this.activeCompareMode = null;
     this.activeCompareTileUrl = null;
-    this.mountTileLayer(this.fullTileUrl || this.ndviTileUrl);
+    if (this.fullTileUrl || this.ndviTileUrl) {
+      this.mountTileLayer(this.fullTileUrl || this.ndviTileUrl);
+    }
   }
 
   /**
@@ -84,7 +90,7 @@ export class NdviLayerManager {
 
     if (tileUrl && typeof tileUrl === "string" && tileUrl.startsWith("http")) {
       this.mountTileLayer(tileUrl);
-    } else if (mode === "current") {
+    } else if (mode === "current" && (this.fullTileUrl || this.ndviTileUrl)) {
       this.mountTileLayer(this.fullTileUrl || this.ndviTileUrl);
     } else {
       console.warn(`setCompareLayer: invalid or missing tileUrl for mode "${mode}":`, tileUrl);
@@ -221,5 +227,18 @@ export class NdviLayerManager {
     } catch (err) {
       console.warn("Error removing Sentinel-2 layer:", err);
     }
+  }
+
+  /**
+   * Completely clears mounted layers and purges all cached tile URLs and modes from memory.
+   */
+  clearLayerState() {
+    this.removeCurrentLayer();
+    this.ndviTileUrl = null;
+    this.fullTileUrl = null;
+    this.classTileUrls = {};
+    this.activeSpotlight = null;
+    this.activeCompareMode = null;
+    this.activeCompareTileUrl = null;
   }
 }

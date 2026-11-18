@@ -392,10 +392,10 @@ def compare_sentinel2_temporal(
 
             ee_geom = ee.Geometry.Polygon(coordinates)
 
-            # 0. Clamp historical date to Sentinel-2 L2A era start (2017-03-28)
-            SENTINEL2_L2A_START = "2017-03-28"
-            if historical_date < SENTINEL2_L2A_START:
-                historical_date = "2017-04-15"
+            # 0. Allow historical dates back to Sentinel-2 launch archive start (2015-06-27)
+            SENTINEL2_START = "2015-06-27"
+            if historical_date < SENTINEL2_START:
+                historical_date = "2015-07-01"
 
             # 1. Parse historical date & search window (+/- 45 days)
             try:
@@ -407,7 +407,7 @@ def compare_sentinel2_temporal(
             hist_start = (hist_dt - timedelta(days=45)).strftime("%Y-%m-%d")
             hist_end = (hist_dt + timedelta(days=45)).strftime("%Y-%m-%d")
 
-            # SCL cloud masking function
+            # SCL cloud masking function for Level-2A (SR)
             def mask_s2_scl(img):
                 scl = img.select("SCL")
                 clear_mask = (
@@ -419,36 +419,83 @@ def compare_sentinel2_temporal(
                 )
                 return img.updateMask(clear_mask)
 
-            # Query historical collection
-            hist_collection = (
-                ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
-                .filterBounds(ee_geom)
-                .filterDate(hist_start, hist_end)
-                .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 40.0))
-            )
+            # QA60 cloud masking function for Level-1C (TOA)
+            def mask_s2_l1c(img):
+                qa = img.select("QA60")
+                cloud_bit_mask = 1 << 10
+                cirrus_bit_mask = 1 << 11
+                mask = (
+                    qa.bitwiseAnd(cloud_bit_mask).eq(0)
+                    .And(qa.bitwiseAnd(cirrus_bit_mask).eq(0))
+                )
+                return img.updateMask(mask)
 
-            hist_count = hist_collection.size().getInfo()
-            if hist_count == 0:
-                # Expand historical window to +/- 90 days and higher cloud threshold
-                hist_start = (hist_dt - timedelta(days=90)).strftime("%Y-%m-%d")
-                hist_end = (hist_dt + timedelta(days=90)).strftime("%Y-%m-%d")
+            use_l1c = historical_date < "2017-04-01"
+            hist_collection = None
+            mask_fn = mask_s2_scl
+
+            if not use_l1c:
+                # Query historical Level-2A (SR) collection
                 hist_collection = (
                     ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
                     .filterBounds(ee_geom)
                     .filterDate(hist_start, hist_end)
-                    .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 60.0))
+                    .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 40.0))
                 )
                 hist_count = hist_collection.size().getInfo()
+                if hist_count == 0:
+                    hist_start_90 = (hist_dt - timedelta(days=90)).strftime("%Y-%m-%d")
+                    hist_end_90 = (hist_dt + timedelta(days=90)).strftime("%Y-%m-%d")
+                    hist_collection = (
+                        ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+                        .filterBounds(ee_geom)
+                        .filterDate(hist_start_90, hist_end_90)
+                        .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 60.0))
+                    )
+                    hist_count = hist_collection.size().getInfo()
 
-            if hist_count == 0:
-                # Fallback to full year around historical date
-                hist_start = (hist_dt - timedelta(days=180)).strftime("%Y-%m-%d")
-                hist_end = (hist_dt + timedelta(days=180)).strftime("%Y-%m-%d")
+                if hist_count == 0:
+                    # Level-2A unavailable for this region/window; fall back to Level-1C
+                    use_l1c = True
+
+            if use_l1c:
+                mask_fn = mask_s2_l1c
+                # Query historical Level-1C (TOA) collection
                 hist_collection = (
-                    ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+                    ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
                     .filterBounds(ee_geom)
                     .filterDate(hist_start, hist_end)
+                    .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 35.0))
                 )
+                hist_count = hist_collection.size().getInfo()
+                if hist_count == 0:
+                    hist_start_90 = (hist_dt - timedelta(days=90)).strftime("%Y-%m-%d")
+                    hist_end_90 = (hist_dt + timedelta(days=90)).strftime("%Y-%m-%d")
+                    hist_collection = (
+                        ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
+                        .filterBounds(ee_geom)
+                        .filterDate(hist_start_90, hist_end_90)
+                        .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 70.0))
+                    )
+                    hist_count = hist_collection.size().getInfo()
+
+                if hist_count == 0:
+                    hist_start_180 = (hist_dt - timedelta(days=180)).strftime("%Y-%m-%d")
+                    hist_end_180 = (hist_dt + timedelta(days=180)).strftime("%Y-%m-%d")
+                    hist_collection = (
+                        ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
+                        .filterBounds(ee_geom)
+                        .filterDate(hist_start_180, hist_end_180)
+                    )
+                    hist_count = hist_collection.size().getInfo()
+
+                if hist_count == 0:
+                    # Regional coverage fallback to full early Sentinel-2 archive
+                    hist_collection = (
+                        ee.ImageCollection("COPERNICUS/S2_HARMONIZED")
+                        .filterBounds(ee_geom)
+                        .filterDate("2015-06-27", "2017-12-31")
+                    )
 
             # Extract actual historical acquisition date
             try:
@@ -462,7 +509,7 @@ def compare_sentinel2_temporal(
                 hist_acq_date = historical_date
 
             # Build historical NDVI composite
-            hist_composite = hist_collection.map(mask_s2_scl).median().clip(ee_geom)
+            hist_composite = hist_collection.map(mask_fn).median().clip(ee_geom)
             hist_ndvi = hist_composite.normalizedDifference(["B8", "B4"]).rename("hist_NDVI")
 
             # 2. Query current collection (past 90 days)

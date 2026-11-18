@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
       statsPanel.clear();
       insightsCard.clear();
       legend.clearAnalysisData();
-      ndviLayers.removeCurrentLayer();
+      ndviLayers.clearLayerState();
 
       // Automatically open sidebar and switch to ANALYSIS tab
       openAnalysisPanel();
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       statsPanel.clear();
       insightsCard.clear();
       legend.clearAnalysisData();
-      ndviLayers.removeCurrentLayer();
+      ndviLayers.clearLayerState();
     },
     onAnalyzeClick: (geometry, info) => {
       executeAnalysisWorkflow(geometry, info);
