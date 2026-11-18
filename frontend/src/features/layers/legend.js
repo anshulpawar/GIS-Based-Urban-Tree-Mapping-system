@@ -229,8 +229,8 @@ export class LegendControl {
             </div>
             <div class="temporal-quick-chips">
               <button type="button" class="temporal-chip" data-years="1">-1 Year</button>
-              <button type="button" class="temporal-chip" data-years="2">-2 Years</button>
-              <button type="button" class="temporal-chip" data-years="3">-3 Years</button>
+              <button type="button" class="temporal-chip" data-years="5">-5 Years</button>
+              <button type="button" class="temporal-chip" data-years="10">-10 Years</button>
             </div>
           </div>
 
@@ -305,7 +305,7 @@ export class LegendControl {
       });
     }
 
-    // Temporal Comparison Quick Chips (-1 Year, -2 Years, -3 Years)
+    // Temporal Comparison Quick Chips (-1 Year, -5 Years, -10 Years)
     const chips = document.querySelectorAll(".temporal-chip");
     const dateInput = document.getElementById("input-compare-date");
     chips.forEach((chip) => {
@@ -644,18 +644,20 @@ export class LegendControl {
     }
 
     baseDate.setFullYear(baseDate.getFullYear() - 1);
-    input.value = baseDate.toISOString().split("T")[0];
+    const dateStr = baseDate.toISOString().split("T")[0];
+    input.value = dateStr < "2015-07-01" ? "2015-07-01" : dateStr;
   }
 
   /**
-   * Helper returning YYYY-MM-DD string N years in the past.
+   * Helper returning YYYY-MM-DD string N years in the past, clamped to Sentinel-2 archive minimum (2015-07-01).
    * @param {number} years
    * @returns {string}
    */
   getPastDateString(years = 1) {
     const d = new Date();
     d.setFullYear(d.getFullYear() - years);
-    return d.toISOString().split("T")[0];
+    const dateStr = d.toISOString().split("T")[0];
+    return dateStr < "2015-07-01" ? "2015-07-01" : dateStr;
   }
 
   /**
