@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file legend.js
  * @description Renders the Global Nature Watch styled NDVI vegetation density scale,
  * interactive 4-tier canopy class isolation spotlights, layer opacity controls,
