@@ -82,10 +82,12 @@ export class NdviLayerManager {
     this.activeCompareMode = mode;
     this.activeCompareTileUrl = tileUrl || null;
 
-    if (tileUrl) {
+    if (tileUrl && typeof tileUrl === "string" && tileUrl.startsWith("http")) {
       this.mountTileLayer(tileUrl);
     } else if (mode === "current") {
       this.mountTileLayer(this.fullTileUrl || this.ndviTileUrl);
+    } else {
+      console.warn(`setCompareLayer: invalid or missing tileUrl for mode "${mode}":`, tileUrl);
     }
   }
 

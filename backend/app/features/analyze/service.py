@@ -116,5 +116,7 @@ def process_temporal_comparison(request: CompareRequest) -> CompareResponse:
         stable_pct=comp_result["stable_pct"],
         delta_tile_url=comp_result["delta_tile_url"],
         historical_tile_url=comp_result.get("historical_tile_url"),
+        current_tile_url=comp_result.get("current_tile_url"),
+        change_tile_url=comp_result.get("change_tile_url"),
         is_simulated=comp_result.get("is_simulated", False)
     )

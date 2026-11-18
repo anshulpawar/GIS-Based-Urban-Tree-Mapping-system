@@ -160,5 +160,7 @@ class CompareResponse(BaseModel):
     stable_pct: float = Field(..., description="Percentage of area with stable canopy (-0.10 < delta < +0.10)")
     delta_tile_url: str = Field(..., description="MapLibre XYZ raster tile URL for diverging delta change map")
     historical_tile_url: Optional[str] = Field(default=None, description="MapLibre XYZ raster tile URL for historical classified NDVI")
+    current_tile_url: Optional[str] = Field(default=None, description="4-tier NDVI XYZ tile URL for current scene")
+    change_tile_url: Optional[str] = Field(default=None, description="3-class discrete change tile URL (Loss/Stable/Gain)")
     is_simulated: bool = Field(default=False, description="Flag indicating if GEE was simulated")
 
