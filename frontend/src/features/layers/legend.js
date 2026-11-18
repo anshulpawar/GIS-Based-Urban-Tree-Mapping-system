@@ -182,53 +182,56 @@ export class LegendControl {
               </div>
             </div>
           </div>
-
-          <!-- Sentinel-2 Temporal Comparison Module -->
-          <div class="temporal-compare-module" id="legend-temporal-module">
-            <div class="temporal-module-header">
-              <div class="temporal-module-title">
-                <i class="fa-regular fa-clock"></i>
-                <span>TEMPORAL COMPARISON</span>
-              </div>
-              <span class="temporal-status-pill">Sentinel-2</span>
-            </div>
-            <p class="temporal-module-desc">
-              Compare current canopy density against historical satellite acquisition.
-            </p>
-
-            <div class="temporal-date-selection">
-              <label for="input-compare-date" class="temporal-label">Historical Baseline Date</label>
-              <div class="temporal-date-row">
-                <input 
-                  type="date" 
-                  id="input-compare-date" 
-                  class="temporal-date-input" 
-                  value="${defaultDate}"
-                  max="${new Date().toISOString().split('T')[0]}"
-                />
-                <button 
-                  id="btn-run-temporal-compare" 
-                  class="btn-run-compare" 
-                  ${this.analysisData ? "" : "disabled"}
-                  title="${this.analysisData ? 'Run Sentinel-2 Band Comparison' : 'Draw and analyze an AOI first'}"
-                >
-                  <i class="fa-solid fa-play"></i> Compare
-                </button>
-              </div>
-              <div class="temporal-quick-chips">
-                <button type="button" class="temporal-chip" data-years="1">-1 Year</button>
-                <button type="button" class="temporal-chip" data-years="2">-2 Years</button>
-                <button type="button" class="temporal-chip" data-years="3">-3 Years</button>
-              </div>
-            </div>
-
-            <!-- Dynamic Results Container -->
-            <div id="temporal-results-container" class="temporal-results-container" style="display: none;"></div>
-          </div>
         </div>
 
         <div class="legend-card-footer">
           ESA COPERNICUS SENTINEL-2 L2A / GOOGLE EARTH ENGINE
+        </div>
+      </div>
+
+      <!-- Card 2: Sentinel-2 Temporal Comparison Module -->
+      <div class="legend-card-module temporal-card-module" id="legend-temporal-module">
+        <div class="legend-card-header">
+          <div class="temporal-module-title">
+            <i class="fa-regular fa-clock"></i>
+            <span>TEMPORAL COMPARISON</span>
+          </div>
+          <span class="temporal-status-pill">Sentinel-2</span>
+        </div>
+
+        <div class="legend-card-body">
+          <p class="temporal-module-desc">
+            Compare current canopy density against historical satellite acquisition.
+          </p>
+
+          <div class="temporal-date-selection">
+            <label for="input-compare-date" class="temporal-label">Historical Baseline Date</label>
+            <div class="temporal-date-row">
+              <input 
+                type="date" 
+                id="input-compare-date" 
+                class="temporal-date-input" 
+                value="${defaultDate}"
+                max="${new Date().toISOString().split('T')[0]}"
+              />
+              <button 
+                id="btn-run-temporal-compare" 
+                class="btn-run-compare" 
+                ${this.analysisData ? "" : "disabled"}
+                title="${this.analysisData ? 'Run Sentinel-2 Band Comparison' : 'Draw and analyze an AOI first'}"
+              >
+                <i class="fa-solid fa-play"></i> Compare
+              </button>
+            </div>
+            <div class="temporal-quick-chips">
+              <button type="button" class="temporal-chip" data-years="1">-1 Year</button>
+              <button type="button" class="temporal-chip" data-years="2">-2 Years</button>
+              <button type="button" class="temporal-chip" data-years="3">-3 Years</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Results Container -->
+          <div id="temporal-results-container" class="temporal-results-container" style="display: none;"></div>
         </div>
       </div>
     `;
