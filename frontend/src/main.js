@@ -15,7 +15,7 @@ import { AoiCard } from "./features/analysis/aoiCard.js";
 import { StatsPanel } from "./features/dashboard/statsPanel.js";
 import { InsightsCard } from "./features/insights/insightsCard.js";
 import { AoiGeometryEngine } from "./features/map/aoiGeometryEngine.js";
-import { submitAnalyzeRequest } from "./api/apiClient.js";
+import { submitAnalyzeRequest, submitCompareRequest } from "./api/apiClient.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Initialize Map Manager (Global World View [lng: 15.0, lat: 20.0], Zoom 2.5)
@@ -39,6 +39,21 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         ndviLayers.setOpacity(0.0);
       }
+    },
+    onSpotlightChange: (classKey) => {
+      return ndviLayers.spotlightClass(classKey);
+    },
+    onResetToFull: () => {
+      ndviLayers.resetToFullNdvi();
+    },
+    onCompareRequest: async (historicalDate) => {
+      if (!currentAoiState || !currentAoiState.geometry) {
+        throw new Error("No active AOI geometry. Please draw an Area of Interest first.");
+      }
+      return await submitCompareRequest(currentAoiState.geometry, historicalDate);
+    },
+    onCompareLayerChange: (mode, tileUrl) => {
+      ndviLayers.setCompareLayer(mode, tileUrl);
     }
   });
   legend.render();
@@ -87,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear previous analysis results if geometry changed
       statsPanel.clear();
       insightsCard.clear();
-      legend.clearPreview();
+      legend.clearAnalysisData();
       ndviLayers.removeCurrentLayer();
 
       // Automatically open sidebar and switch to ANALYSIS tab
@@ -106,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       aoiCard.render(null);
       statsPanel.clear();
       insightsCard.clear();
-      legend.clearPreview();
+      legend.clearAnalysisData();
       ndviLayers.removeCurrentLayer();
     },
     onAnalyzeClick: (geometry, info) => {
@@ -161,18 +176,15 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("No analysis data could be computed.");
       }
 
-      // 1. Mount dynamic NDVI layer strictly on the map canvas
+      // 1. Mount dynamic NDVI layer and register class spotlight tile URLs
       const ndviUrl = analysisResult.ndvi_tile_url || analysisResult.tile_url_template;
       ndviLayers.setNdviLayer(ndviUrl, legend.currentOpacity / 100.0);
+      if (analysisResult.class_tile_urls) {
+        ndviLayers.setClassTileUrls(analysisResult.class_tile_urls);
+      }
 
-      // 2. Pass static optical satellite preview to the Legend panel
-      const thumbUrl = analysisResult.rgb_thumb_url || null;
-      legend.setSatellitePreview({
-        thumbUrl: thumbUrl,
-        acquisitionDate: analysisResult.acquisition_date,
-        satellite: analysisResult.satellite,
-        areaName: studyAreaName
-      });
+      // 2. Pass analysis data and geometry to Legend panel for Spotlight & Temporal Comparison
+      legend.setAnalysisData(analysisResult, geometry);
 
       // 3. Render Canopy Statistics Panel
       statsPanel.update(analysisResult);
@@ -273,8 +285,12 @@ document.addEventListener("DOMContentLoaded", () => {
       acquisition_date: new Date().toISOString().split("T")[0] + " (Sentinel-2 L2A)",
       satellite: "Sentinel-2 L2A (10m Simulated)",
       ndvi_tile_url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      rgb_tile_url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      rgb_thumb_url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=640&q=80",
+      class_tile_urls: {
+        dense: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        moderate: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        sparse: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        deficit: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      },
       stats: {
         mean_ndvi: meanNdvi,
         green_cover_pct: greenCoverPct,
@@ -338,10 +354,17 @@ document.addEventListener("DOMContentLoaded", () => {
       // 3. Open sidebar and switch to ANALYSIS tab
       openAnalysisPanel();
 
-      // 4. Update stats and insights
+      // 4. Update stats, insights, and legend controls
       statsPanel.update(runData);
       if (runData.insights_summary) {
         insightsCard.update(runData.insights_summary);
+      }
+      legend.setAnalysisData(runData, runData.geometry);
+      if (runData.tile_url_template || runData.ndvi_tile_url) {
+        ndviLayers.setNdviLayer(runData.tile_url_template || runData.ndvi_tile_url, legend.currentOpacity / 100.0);
+      }
+      if (runData.class_tile_urls) {
+        ndviLayers.setClassTileUrls(runData.class_tile_urls);
       }
 
       showSearchToast(`Recalled "${runData.run_label}" on map.`, "success");

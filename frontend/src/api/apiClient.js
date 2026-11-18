@@ -62,6 +62,37 @@ export async function submitAnalyzeRequest(geoJsonPolygon, options = {}) {
 }
 
 /**
+ * Submits an AOI polygon geometry and historical comparison date to Google Earth Engine.
+ * @param {Object} geoJsonPolygon - GeoJSON Polygon geometry { type: "Polygon", coordinates: [...] }
+ * @param {string} historicalDate - Target historical date (YYYY-MM-DD)
+ * @param {Object} [options={}] - Optional parameters (name, current_date)
+ * @returns {Promise<Object>} Comparison results: mean_current_ndvi, mean_historical_ndvi, mean_delta_ndvi, gain_pct, loss_pct, stable_pct, delta_tile_url, historical_tile_url
+ */
+export async function submitCompareRequest(geoJsonPolygon, historicalDate, options = {}) {
+  const payload = {
+    geometry: geoJsonPolygon,
+    historical_date: historicalDate,
+    current_date: options.current_date || null,
+    name: options.name || `Temporal Comparison ${historicalDate}`
+  };
+
+  const response = await fetch(`${API_BASE_URL}/analyze/compare`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Temporal comparison failed with HTTP ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+/**
  * Retrieves the historical analysis runs.
  * @param {number} [limit=50]
  * @param {number} [offset=0]

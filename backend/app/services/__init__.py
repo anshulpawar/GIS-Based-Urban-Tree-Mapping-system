@@ -6,6 +6,7 @@ from app.services.gee_service import (
     is_gee_ready,
     get_gee_status,
     analyze_sentinel2_aoi,
+    compare_sentinel2_temporal,
 )
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "is_gee_ready",
     "get_gee_status",
     "analyze_sentinel2_aoi",
+    "compare_sentinel2_temporal",
 ]
 
