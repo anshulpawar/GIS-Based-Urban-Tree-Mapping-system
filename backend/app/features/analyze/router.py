@@ -8,8 +8,16 @@ and generating environmental insights.
 
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status
-from app.features.analyze.schemas import AnalyzeRequest, AnalyzeResponse
-from app.features.analyze.service import process_ndvi_analysis
+from app.features.analyze.schemas import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    CompareRequest,
+    CompareResponse,
+)
+from app.features.analyze.service import (
+    process_ndvi_analysis,
+    process_temporal_comparison,
+)
 from app.features.insights.service import evaluate_environmental_insights
 from app.features.history.service import save_analysis_record
 from app.features.history.schemas import HistoryDetailResponse
@@ -77,4 +85,31 @@ async def analyze_polygon(request: AnalyzeRequest) -> AnalyzeResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"NDVI processing failed: {str(exc)}"
         ) from exc
+
+
+@router.post(
+    "/compare",
+    response_model=CompareResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Compute Custom-Date Temporal Vegetation Comparison",
+    description="Compares current Sentinel-2 NDVI against a specified historical baseline date, generating delta statistics and XYZ change tiles."
+)
+async def compare_temporal_canopy(request: CompareRequest) -> CompareResponse:
+    """
+    Computes delta NDVI = current - historical over the requested GeoJSON polygon.
+    """
+    if not request.geometry.coordinates or len(request.geometry.coordinates[0]) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A polygon geometry requires at least 3 coordinates."
+        )
+
+    try:
+        return process_temporal_comparison(request)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Temporal comparison failed: {str(exc)}"
+        ) from exc
+
 

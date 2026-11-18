@@ -12,17 +12,24 @@ from typing import Dict, Any
 from app.features.analyze.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
+    CompareRequest,
+    CompareResponse,
     VegetationBreakdown,
     ZonalStats,
 )
-from app.services.gee_service import analyze_sentinel2_aoi, initialize_earth_engine, is_gee_ready
+from app.services.gee_service import (
+    analyze_sentinel2_aoi,
+    compare_sentinel2_temporal,
+    initialize_earth_engine,
+    is_gee_ready,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def process_ndvi_analysis(request: AnalyzeRequest) -> AnalyzeResponse:
     """
-    Executes live Sentinel-2 L2A NDVI and True-Color analysis via Google Earth Engine.
+    Executes live Sentinel-2 L2A NDVI analysis via Google Earth Engine.
     """
     study_name = request.name or request.run_label or "Urban AOI Analysis"
     coords = request.geometry.coordinates
@@ -71,7 +78,8 @@ def process_ndvi_analysis(request: AnalyzeRequest) -> AnalyzeResponse:
         acquisition_date=gee_result["acquisition_date"],
         satellite=gee_result["satellite"],
         ndvi_tile_url=gee_result["ndvi_tile_url"],
-        rgb_tile_url=gee_result["rgb_tile_url"],
+        rgb_tile_url=gee_result.get("rgb_tile_url", gee_result["ndvi_tile_url"]),
+        class_tile_urls=gee_result.get("class_tile_urls"),
         stats=zonal_stats,
         total_area_hectares=round(total_ha, 2),
         total_area_sq_meters=round(total_sqm, 2),
@@ -81,4 +89,32 @@ def process_ndvi_analysis(request: AnalyzeRequest) -> AnalyzeResponse:
         tile_url_template=gee_result["ndvi_tile_url"],
         insights_summary={"source": "gee_sentinel2_l2a"},
         is_simulated=gee_result.get("is_simulated", False)
+    )
+
+
+def process_temporal_comparison(request: CompareRequest) -> CompareResponse:
+    """
+    Executes deterministic temporal vegetation comparison via Google Earth Engine.
+    """
+    coords = request.geometry.coordinates
+    comp_result = compare_sentinel2_temporal(
+        coordinates=coords,
+        historical_date=request.historical_date,
+        current_date=request.current_date
+    )
+
+    return CompareResponse(
+        status=comp_result["status"],
+        historical_date=comp_result["historical_date"],
+        historical_acquisition_date=comp_result["historical_acquisition_date"],
+        current_acquisition_date=comp_result["current_acquisition_date"],
+        historical_mean_ndvi=comp_result["historical_mean_ndvi"],
+        current_mean_ndvi=comp_result["current_mean_ndvi"],
+        mean_delta_ndvi=comp_result["mean_delta_ndvi"],
+        gain_pct=comp_result["gain_pct"],
+        loss_pct=comp_result["loss_pct"],
+        stable_pct=comp_result["stable_pct"],
+        delta_tile_url=comp_result["delta_tile_url"],
+        historical_tile_url=comp_result.get("historical_tile_url"),
+        is_simulated=comp_result.get("is_simulated", False)
     )

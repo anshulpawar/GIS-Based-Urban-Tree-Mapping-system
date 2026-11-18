@@ -104,6 +104,7 @@ class AnalyzeResponse(BaseModel):
     satellite: str = Field(default="Sentinel-2 L2A (10m)", description="Satellite mission and optical resolution")
     ndvi_tile_url: str = Field(..., description="MapLibre XYZ raster tile URL for 4-tier discrete NDVI heatmap")
     rgb_tile_url: str = Field(..., description="MapLibre XYZ raster tile URL for True-Color Sentinel-2 RGB composite")
+    class_tile_urls: Optional[Dict[str, str]] = Field(default=None, description="Per-class masked XYZ tile URLs (dense, moderate, sparse, deficit)")
     stats: ZonalStats = Field(..., description="Comprehensive zonal statistics")
     total_area_hectares: float = Field(..., description="Calculated area of polygon in hectares")
     total_area_sq_meters: float = Field(..., description="Calculated area of polygon in square meters")
@@ -118,5 +119,46 @@ class AnalyzeResponse(BaseModel):
         default=None,
         description="Rule-based environmental recommendation summary"
     )
+    is_simulated: bool = Field(default=False, description="Flag indicating if GEE was simulated")
+
+
+class CompareRequest(BaseModel):
+    """
+    Payload for custom-date temporal vegetation comparison.
+    """
+    geometry: GeoJSONPolygonGeometry = Field(
+        ...,
+        description="Target Area of Interest (AOI) polygon in GeoJSON format"
+    )
+    historical_date: str = Field(
+        ...,
+        description="Historical comparison date (YYYY-MM-DD)"
+    )
+    current_date: Optional[str] = Field(
+        default=None,
+        description="Optional current date override (YYYY-MM-DD)"
+    )
+    name: Optional[str] = Field(
+        default=None,
+        description="Optional study area name"
+    )
+
+
+class CompareResponse(BaseModel):
+    """
+    Computed temporal vegetation difference between historical date and current date.
+    """
+    status: str = Field(default="success", description="Status indicator")
+    historical_date: str = Field(..., description="Requested baseline historical date (YYYY-MM-DD)")
+    historical_acquisition_date: str = Field(..., description="Actual Sentinel-2 historical scene acquisition date (YYYY-MM-DD)")
+    current_acquisition_date: str = Field(..., description="Actual Sentinel-2 current scene acquisition date (YYYY-MM-DD)")
+    historical_mean_ndvi: float = Field(..., description="Mean NDVI for the historical scene")
+    current_mean_ndvi: float = Field(..., description="Mean NDVI for the current scene")
+    mean_delta_ndvi: float = Field(..., description="Net NDVI difference: current - historical")
+    gain_pct: float = Field(..., description="Percentage of area with significant vegetation gain (delta >= +0.10)")
+    loss_pct: float = Field(..., description="Percentage of area with significant vegetation loss (delta <= -0.10)")
+    stable_pct: float = Field(..., description="Percentage of area with stable canopy (-0.10 < delta < +0.10)")
+    delta_tile_url: str = Field(..., description="MapLibre XYZ raster tile URL for diverging delta change map")
+    historical_tile_url: Optional[str] = Field(default=None, description="MapLibre XYZ raster tile URL for historical classified NDVI")
     is_simulated: bool = Field(default=False, description="Flag indicating if GEE was simulated")
 
