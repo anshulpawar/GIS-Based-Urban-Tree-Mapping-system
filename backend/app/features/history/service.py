@@ -146,7 +146,7 @@ def save_analysis_record(detail: HistoryDetailResponse) -> HistoryDetailResponse
 
 def fetch_history_list(limit: int = 50, offset: int = 0) -> HistoryListResponse:
     """
-    Queries historical analysis runs from Supabase PostGIS or local fallback.
+    Queries historical analysis runs from Supabase PostGIS public.analysis_history or local fallback.
 
     Args:
         limit (int): Number of items to retrieve.
@@ -156,31 +156,30 @@ def fetch_history_list(limit: int = 50, offset: int = 0) -> HistoryListResponse:
         HistoryListResponse: List of summary objects for sidebar rendering.
     """
     try:
-        supabase = get_supabase_client()
-        response = (
-            supabase.table("analysis_runs")
-            .select("id, run_label, created_at, acquisition_date, total_area_hectares, mean_ndvi, green_cover_percentage, insights")
-            .order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
-        )
-        if response.data:
+        from app.services.supabase_service import list_analyses
+        records = list_analyses(limit=limit + offset)
+        if records:
             items = []
-            for row in response.data:
-                health_status = None
-                if row.get("insights") and isinstance(row["insights"], dict):
-                    health_status = row["insights"].get("overall_health_status")
+            for row in records[offset : offset + limit]:
+                created_dt = row.get("created_at")
+                if isinstance(created_dt, str):
+                    try:
+                        created_dt = datetime.fromisoformat(created_dt)
+                    except Exception:
+                        created_dt = datetime.now(timezone.utc)
+                elif not created_dt:
+                    created_dt = datetime.now(timezone.utc)
 
                 items.append(
                     HistoryItemSummary(
                         id=str(row["id"]),
-                        run_label=row.get("run_label", "Unnamed AOI"),
-                        created_at=datetime.fromisoformat(row["created_at"]),
-                        acquisition_date=row.get("acquisition_date", "N/A"),
+                        run_label=row.get("area_name") or row.get("run_label", "Unnamed AOI"),
+                        created_at=created_dt,
+                        acquisition_date=str(row.get("satellite_date_used") or row.get("acquisition_date", "N/A")),
                         total_area_hectares=float(row.get("total_area_hectares", 0.0)),
                         mean_ndvi=float(row.get("mean_ndvi", 0.0)),
                         green_cover_percentage=float(row.get("green_cover_percentage", 0.0)),
-                        overall_health_status=health_status
+                        overall_health_status=str(row.get("generated_insights") or "Canopy Assessment")[:60]
                     )
                 )
             return HistoryListResponse(total=len(items), items=items)
@@ -219,26 +218,52 @@ def fetch_history_by_id(run_id: str) -> Optional[HistoryDetailResponse]:
         return _mock_history_db[run_id]
 
     try:
-        supabase = get_supabase_client()
-        response = supabase.table("analysis_runs").select("*").eq("id", run_id).single().execute()
-        if response.data:
-            data = response.data
-            return HistoryDetailResponse(
-                id=str(data["id"]),
-                run_label=data.get("run_label", "Analysis AOI"),
-                created_at=datetime.fromisoformat(data["created_at"]),
-                acquisition_date=data.get("acquisition_date", "N/A"),
-                total_area_hectares=float(data.get("total_area_hectares", 0.0)),
-                total_area_sq_meters=float(data.get("total_area_sq_meters", 0.0)),
-                mean_ndvi=float(data.get("mean_ndvi", 0.0)),
-                green_cover_percentage=float(data.get("green_cover_percentage", 0.0)),
-                vegetation_breakdown=VegetationBreakdown(**data["vegetation_breakdown"]) if data.get("vegetation_breakdown") else None,
-                tile_url_template=data.get("tile_url_template", ""),
-                geometry=GeoJSONPolygonGeometry(**data["geometry"]),
-                insights=InsightReport(**data["insights"]) if data.get("insights") else None
-            )
+        from app.services.supabase_service import get_analysis_by_id
+        data = get_analysis_by_id(run_id)
+        if data:
+            geom = data.get("geojson")
+            if not geom and isinstance(data.get("polygon_geom"), dict):
+                geom = data["polygon_geom"]
+
+            if geom:
+                created_dt = data.get("created_at")
+                if isinstance(created_dt, str):
+                    try:
+                        created_dt = datetime.fromisoformat(created_dt)
+                    except Exception:
+                        created_dt = datetime.now(timezone.utc)
+                elif not created_dt:
+                    created_dt = datetime.now(timezone.utc)
+
+                tot_ha = float(data.get("total_area_hectares", 0.0))
+                dense_p = float(data.get("dense_pct") or 0.0)
+                mod_p = float(data.get("moderate_pct") or 0.0)
+                sparse_p = float(data.get("sparse_pct") or 0.0)
+                def_p = float(data.get("deficit_pct") or 0.0)
+
+                return HistoryDetailResponse(
+                    id=str(data["id"]),
+                    run_label=data.get("area_name", "Analysis AOI"),
+                    created_at=created_dt,
+                    acquisition_date=str(data.get("satellite_date_used", "N/A")),
+                    total_area_hectares=tot_ha,
+                    total_area_sq_meters=round(tot_ha * 10000.0, 2),
+                    mean_ndvi=float(data.get("mean_ndvi", 0.0)),
+                    green_cover_percentage=float(data.get("green_cover_percentage", 0.0)),
+                    vegetation_breakdown=VegetationBreakdown(
+                        dense_canopy_pct=dense_p,
+                        moderate_cover_pct=mod_p,
+                        sparse_or_built_pct=round(sparse_p + def_p, 1),
+                        sparse_pct=sparse_p,
+                        non_veg_pct=def_p
+                    ),
+                    tile_url_template=data.get("gee_tile_url", ""),
+                    geometry=GeoJSONPolygonGeometry(**geom),
+                    insights=None
+                )
     except Exception as exc:
         logger.warning("Supabase record fetch failed for %s: %s", run_id, exc)
 
     return None
+
 
