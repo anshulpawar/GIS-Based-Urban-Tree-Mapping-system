@@ -6,8 +6,11 @@ computing green cover percentage, generating dynamic XYZ raster overlays,
 and generating environmental insights.
 """
 
+import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status
+
+logger = logging.getLogger(__name__)
 from app.features.analyze.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
@@ -19,8 +22,7 @@ from app.features.analyze.service import (
     process_temporal_comparison,
 )
 from app.features.insights.service import evaluate_environmental_insights
-from app.features.history.service import save_analysis_record
-from app.features.history.schemas import HistoryDetailResponse
+from app.services.supabase_service import save_analysis_record
 
 router = APIRouter(prefix="/analyze", tags=["Analyze"])
 
@@ -61,22 +63,28 @@ async def analyze_polygon(request: AnalyzeRequest) -> AnalyzeResponse:
         # Attach insights to response summary
         analysis_result.insights_summary = insights_report.model_dump()
 
-        # Step 3: Persist run to PostGIS history
-        history_record = HistoryDetailResponse(
-            id=analysis_result.analysis_id,
-            run_label=analysis_result.run_label,
-            created_at=datetime.now(timezone.utc),
-            acquisition_date=analysis_result.acquisition_date,
-            total_area_hectares=analysis_result.total_area_hectares,
-            total_area_sq_meters=analysis_result.total_area_sq_meters,
-            mean_ndvi=analysis_result.mean_ndvi,
-            green_cover_percentage=analysis_result.green_cover_percentage,
-            vegetation_breakdown=analysis_result.vegetation_breakdown,
-            tile_url_template=analysis_result.tile_url_template,
-            geometry=request.geometry,
-            insights=insights_report
-        )
-        save_analysis_record(history_record)
+        # Step 3: Persist run to Supabase PostGIS spatial history (resilient: non-blocking)
+        try:
+            save_payload = {
+                "id": analysis_result.analysis_id,
+                "area_name": request.area_name or request.name or request.run_label or analysis_result.area_name or "Custom Selected Area",
+                "geometry": request.geometry.model_dump(),
+                "total_area_hectares": analysis_result.total_area_hectares,
+                "green_cover_percentage": analysis_result.green_cover_percentage,
+                "mean_ndvi": analysis_result.mean_ndvi,
+                "satellite_date_used": analysis_result.acquisition_date,
+                "gee_tile_url": analysis_result.tile_url_template,
+                "generated_insights": insights_report.model_dump() if insights_report else None,
+                "dense_pct": analysis_result.stats.dense_pct,
+                "moderate_pct": analysis_result.stats.moderate_pct,
+                "sparse_pct": analysis_result.stats.sparse_pct,
+                "deficit_pct": analysis_result.stats.non_veg_pct,
+            }
+            saved_record = save_analysis_record(save_payload)
+            if saved_record and saved_record.get("id"):
+                analysis_result.saved_id = str(saved_record["id"])
+        except Exception as db_exc:
+            logger.warning("Supabase persistence failed non-fatally: %s", db_exc)
 
         return analysis_result
 

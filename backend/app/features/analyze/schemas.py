@@ -38,6 +38,10 @@ class AnalyzeRequest(BaseModel):
         default="Urban AOI Analysis",
         description="Human-readable label for saving run in history"
     )
+    area_name: Optional[str] = Field(
+        default="Custom Selected Area",
+        description="Study area name for history persistence"
+    )
     area_sqkm: Optional[float] = Field(
         default=None,
         description="Geodesic surface area in square kilometers"
@@ -118,6 +122,10 @@ class AnalyzeResponse(BaseModel):
     insights_summary: Optional[Dict[str, Any]] = Field(
         default=None,
         description="Rule-based environmental recommendation summary"
+    )
+    saved_id: Optional[str] = Field(
+        default=None,
+        description="UUID of persisted record in Supabase PostGIS public.analysis_history"
     )
     is_simulated: bool = Field(default=False, description="Flag indicating if GEE was simulated")
 

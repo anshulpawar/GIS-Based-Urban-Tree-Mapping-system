@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.features.analyze.router import router as analyze_router
+from app.features.analyses.router import router as analyses_router
 from app.features.history.router import router as history_router
 from app.services.gee_service import get_gee_status, initialize_earth_engine
 
@@ -54,6 +55,7 @@ async def health_check():
 
 # Mount feature routers under API prefix
 app.include_router(analyze_router, prefix="/api")
+app.include_router(analyses_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
 
 
