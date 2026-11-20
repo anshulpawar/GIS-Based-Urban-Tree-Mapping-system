@@ -82,6 +82,15 @@
 
       <!-- Polygon Action Buttons -->
       <div class="navbar-polygon-tools">
+        <input
+          type="text"
+          id="navbar-area-name-input"
+          class="navbar-area-name-input"
+          placeholder="Area name (optional, e.g., Cubbon Park)"
+          maxlength="80"
+          autocomplete="off"
+          spellcheck="false"
+        />
         <button id="btn-draw-polygon" class="toolbar-btn" title="Draw Area of Interest polygon on map">
           <i class="fa-solid fa-draw-polygon"></i>
           <span>Draw AOI</span>
@@ -212,18 +221,30 @@
             Saved Sentinel-2 analysis runs, canopy cover statistics, and spatial polygons from Supabase PostGIS.
           </p>
         </div>
-        <button id="btn-dashboard-back-map" class="btn-primary-action compact">
-          <i class="fa-solid fa-earth-americas"></i>
-          <span>Back to Map</span>
-        </button>
+        <div class="dashboard-header-actions">
+          <button id="btn-dashboard-refresh" class="btn-secondary-action compact" title="Refresh saved runs from Supabase">
+            <i class="fa-solid fa-rotate"></i>
+            <span>Refresh</span>
+          </button>
+          <button id="btn-dashboard-back-map" class="btn-primary-action compact">
+            <i class="fa-solid fa-earth-americas"></i>
+            <span>Back to Map</span>
+          </button>
+        </div>
       </div>
 
       <!-- KPI Summary Cards -->
       <div class="kpi-grid">
         <div class="kpi-card glass-panel">
-          <div class="kpi-label">Total Analyses Recorded</div>
+          <div class="kpi-label">Total Analyses</div>
           <div id="kpi-total-runs" class="kpi-value">0</div>
           <div class="kpi-trend"><i class="fa-solid fa-chart-line"></i> PostGIS Spatial Runs</div>
+        </div>
+
+        <div class="kpi-card glass-panel">
+          <div class="kpi-label">Total Area Assessed</div>
+          <div id="kpi-total-area" class="kpi-value">-- ha</div>
+          <div class="kpi-trend">Calculated AOI Surface</div>
         </div>
 
         <div class="kpi-card glass-panel">
@@ -233,15 +254,9 @@
         </div>
 
         <div class="kpi-card glass-panel">
-          <div class="kpi-label">Average Mean NDVI</div>
-          <div id="kpi-avg-ndvi" class="kpi-value highlight-cyan">--</div>
-          <div class="kpi-trend">Global Standard (-1 to +1)</div>
-        </div>
-
-        <div class="kpi-card glass-panel">
-          <div class="kpi-label">Total Hectares Analyzed</div>
-          <div id="kpi-total-area" class="kpi-value">-- ha</div>
-          <div class="kpi-trend">Calculated AOI Surface</div>
+          <div class="kpi-label">Priority Deficit Zone</div>
+          <div id="kpi-priority-zone" class="kpi-value highlight-deficit" style="font-size: 16px; word-break: break-word;">--</div>
+          <div class="kpi-trend"><i class="fa-solid fa-triangle-exclamation"></i> Lowest Canopy Cover</div>
         </div>
       </div>
 
@@ -249,10 +264,10 @@
       <div class="dashboard-table-section glass-panel">
         <div class="table-section-header">
           <h3>Saved Spatial Analyses</h3>
-          <span class="table-caption">Click any run row or "Explore on Map" to fly to the polygon.</span>
+          <span class="table-caption">Click "View on Map" or any run row to fly to the polygon.</span>
         </div>
         <div id="history-table-container">
-          <!-- Populated dynamically by historyDrawer.js -->
+          <!-- Populated dynamically by dashboardView.js -->
         </div>
       </div>
     </div>

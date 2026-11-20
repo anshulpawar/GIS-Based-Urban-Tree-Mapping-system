@@ -10,7 +10,7 @@ import { MapManager } from "./features/map/mapManager.js";
 import { DrawTool } from "./features/map/drawTool.js";
 import { NdviLayerManager } from "./features/layers/ndviLayer.js";
 import { LegendControl } from "./features/layers/legend.js";
-import { HistoryDrawer } from "./features/history/historyDrawer.js";
+import { DashboardView } from "./features/dashboard/dashboardView.js";
 import { AoiCard } from "./features/analysis/aoiCard.js";
 import { StatsPanel } from "./features/dashboard/statsPanel.js";
 import { InsightsCard } from "./features/insights/insightsCard.js";
@@ -66,6 +66,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let isAnalyzing = false;
   let currentAoiState = null;
 
+  // Study Area Name Input in Navbar
+  const navbarAreaInput = document.getElementById("navbar-area-name-input");
+  if (navbarAreaInput) {
+    navbarAreaInput.addEventListener("input", (e) => {
+      const val = e.target.value.trim();
+      drawTool.setStudyAreaName(val);
+      if (currentAoiState) {
+        currentAoiState.studyAreaName = val;
+      }
+    });
+  }
+
   // AOI Diagnostics Card (Geodesic measurements, guardrails, reverse geocode title)
   const aoiCard = new AoiCard("aoi-card-container", {
     onAnalyzeClick: (geometry, info) => {
@@ -79,6 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentAoiState) {
         currentAoiState.studyAreaName = newName;
       }
+      if (navbarAreaInput) {
+        navbarAreaInput.value = newName;
+      }
     }
   });
 
@@ -88,6 +103,11 @@ document.addEventListener("DOMContentLoaded", () => {
     onGeometryChange: (aoiData) => {
       currentAoiState = aoiData;
       const { geometry, validation, metrics, studyAreaName } = aoiData;
+
+      // Sync navbar study area input if empty and geocode found a name
+      if (navbarAreaInput && !navbarAreaInput.value.trim() && studyAreaName && studyAreaName !== "Custom Study Area") {
+        navbarAreaInput.value = studyAreaName;
+      }
 
       // Hide default empty state, display live diagnostics card
       if (emptyStateEl) emptyStateEl.style.display = "none";
@@ -117,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     onPolygonClear: () => {
       currentAoiState = null;
+      if (navbarAreaInput) navbarAreaInput.value = "";
       if (emptyStateEl) emptyStateEl.style.display = "flex";
       aoiCard.render(null);
       statsPanel.clear();
@@ -139,7 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const studyAreaName = info.studyAreaName || drawTool.studyAreaName || "Custom Study Area";
+    const inputName = navbarAreaInput && navbarAreaInput.value.trim() ? navbarAreaInput.value.trim() : null;
+    const studyAreaName = inputName || info.studyAreaName || drawTool.studyAreaName || "Custom Selected Area";
 
     isAnalyzing = true;
     updateAnalysisLoadingState(true, studyAreaName, geometry, validation);
@@ -156,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         // Attempt backend analysis request
         analysisResult = await submitAnalyzeRequest(geometry, {
+          area_name: studyAreaName,
           name: studyAreaName,
           run_label: studyAreaName,
           area_sqkm: areaSqKm,
@@ -192,23 +215,6 @@ document.addEventListener("DOMContentLoaded", () => {
       // 4. Render Ecological Diagnostics Card
       if (analysisResult.insights_summary) {
         insightsCard.update(analysisResult.insights_summary);
-      }
-
-      // 4. Record to PostGIS History Drawer
-      if (historyDashboard) {
-        historyDashboard.addRun({
-          id: analysisResult.analysis_id || "run-" + Date.now(),
-          run_label: studyAreaName,
-          created_at: new Date().toISOString(),
-          total_area_hectares: analysisResult.total_area_hectares,
-          total_area_sq_meters: analysisResult.total_area_sq_meters,
-          green_cover_percentage: analysisResult.green_cover_percentage,
-          mean_ndvi: analysisResult.mean_ndvi,
-          geometry: geometry,
-          tile_url_template: analysisResult.tile_url_template,
-          vegetation_breakdown: analysisResult.vegetation_breakdown,
-          insights_summary: analysisResult.insights_summary
-        });
       }
 
       showSearchToast(
@@ -339,35 +345,115 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 7. Initialize Analytics & PostGIS Spatial History Dashboard
-  const historyDashboard = new HistoryDrawer({
+  const dashboardViewInstance = new DashboardView({
     containerId: "history-table-container",
-    onSelectRun: (runId, runData) => {
+    onToast: (msg, type) => showSearchToast(msg, type),
+    onSelectRun: async (record) => {
+      if (!record) return;
+
       // 1. Switch back to MAP view
       switchPrimaryView("map");
 
-      // 2. Render polygon boundary and fly to coordinates
-      if (runData && runData.geometry) {
-        drawTool.renderPolygon(runData.geometry, { run_label: runData.run_label });
-        mapManager.fitToCoordinates(runData.geometry.coordinates);
+      // 2. Extract polygon geometry
+      let geometry = record.geojson || record.polygon_geom;
+      if (typeof geometry === "string") {
+        try {
+          geometry = JSON.parse(geometry);
+        } catch (e) {
+          console.error("Failed to parse recalled polygon geometry:", e);
+        }
       }
 
-      // 3. Open sidebar and switch to ANALYSIS tab
+      if (!geometry || !geometry.coordinates) {
+        showSearchToast("Cannot recall run: missing valid polygon boundary.", "error");
+        return;
+      }
+
+      const areaName = record.area_name || "Custom Selected Area";
+
+      // 3. Render polygon boundary on map
+      await drawTool.renderPolygon(geometry, { run_label: areaName });
+
+      // 4. Smoothly fly camera to boundary
+      mapManager.fitToCoordinates(geometry.coordinates);
+
+      // 5. Expand sidebar and open ANALYSIS tab
       openAnalysisPanel();
 
-      // 4. Update stats, insights, and legend controls
-      statsPanel.update(runData);
-      if (runData.insights_summary) {
-        insightsCard.update(runData.insights_summary);
-      }
-      legend.setAnalysisData(runData, runData.geometry);
-      if (runData.tile_url_template || runData.ndvi_tile_url) {
-        ndviLayers.setNdviLayer(runData.tile_url_template || runData.ndvi_tile_url, legend.currentOpacity / 100.0);
-      }
-      if (runData.class_tile_urls) {
-        ndviLayers.setClassTileUrls(runData.class_tile_urls);
+      // 6. Restore telemetry, statistics, and legend
+      const totalHa = Number(record.total_area_hectares) || 0;
+      const greenPct = Number(record.green_cover_percentage) || 0;
+      const meanNdvi = Number(record.mean_ndvi) || 0;
+      const denseVal = record.dense_pct != null ? Number(record.dense_pct) : Math.round(greenPct * 0.55);
+      const modVal = record.moderate_pct != null ? Number(record.moderate_pct) : Math.round(greenPct * 0.45);
+      const sparseVal = record.sparse_pct != null ? Number(record.sparse_pct) : Math.round((100 - greenPct) * 0.45);
+      const deficitVal = record.deficit_pct != null ? Number(record.deficit_pct) : Math.round((100 - greenPct) * 0.55);
+
+      let insights = null;
+      if (record.generated_insights) {
+        if (typeof record.generated_insights === "string") {
+          try {
+            insights = JSON.parse(record.generated_insights);
+          } catch (_) {
+            insights = { overall_health_status: record.generated_insights };
+          }
+        } else {
+          insights = record.generated_insights;
+        }
       }
 
-      showSearchToast(`Recalled "${runData.run_label}" on map.`, "success");
+      const restoredPayload = {
+        status: "success",
+        analysis_id: record.id,
+        area_name: areaName,
+        run_label: areaName,
+        studyAreaName: areaName,
+        acquisition_date: record.satellite_date_used || (record.created_at ? record.created_at.split("T")[0] : "Saved Run"),
+        satellite: "Sentinel-2 L2A (10m Recall)",
+        ndvi_tile_url: record.gee_tile_url || null,
+        tile_url_template: record.gee_tile_url || null,
+        total_area_hectares: totalHa,
+        total_area_sq_meters: Math.round(totalHa * 10000),
+        mean_ndvi: meanNdvi,
+        green_cover_percentage: greenPct,
+        stats: {
+          mean_ndvi: meanNdvi,
+          green_cover_pct: greenPct,
+          dense_pct: denseVal,
+          moderate_pct: modVal,
+          sparse_pct: sparseVal,
+          non_veg_pct: deficitVal,
+          area_ha: totalHa,
+          area_sqkm: totalHa / 100,
+          pixel_count: Math.round((totalHa * 10000) / 100)
+        },
+        vegetation_breakdown: {
+          dense_canopy_pct: denseVal,
+          moderate_cover_pct: modVal,
+          sparse_or_built_pct: sparseVal + deficitVal
+        },
+        insights_summary: insights,
+        geometry: geometry
+      };
+
+      statsPanel.update(restoredPayload);
+      if (insights) {
+        insightsCard.update(insights);
+      }
+      legend.setAnalysisData(restoredPayload, geometry);
+
+      // Sync navbar study area input
+      if (navbarAreaInput) {
+        navbarAreaInput.value = areaName;
+      }
+
+      // Mount NDVI raster layer if present
+      if (record.gee_tile_url) {
+        ndviLayers.setNdviLayer(record.gee_tile_url, legend.currentOpacity / 100.0);
+      }
+
+      // Show non-blocking feedback toast with 1-click Re-run option
+      showRecallNotification(areaName, geometry);
     }
   });
 
@@ -393,6 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
       navBtnMap.classList.remove("active");
       mapView.style.display = "none";
       dashboardView.style.display = "block";
+      dashboardViewInstance.loadAnalyses();
     }
   }
 
@@ -517,6 +604,36 @@ document.addEventListener("DOMContentLoaded", () => {
     feedbackTimer = setTimeout(() => {
       searchFeedback.style.display = "none";
     }, 4500);
+  }
+
+  function showRecallNotification(areaName, geometry) {
+    if (!searchFeedback) return;
+    if (feedbackTimer) clearTimeout(feedbackTimer);
+
+    searchFeedback.className = "search-feedback-toast success recall-banner";
+    searchFeedback.innerHTML = `
+      <div class="toast-recall-content">
+        <i class="fa-solid fa-cloud-arrow-down"></i>
+        <span>Recalled <strong>${areaName}</strong> from PostGIS</span>
+      </div>
+      <button id="btn-toast-rerun" class="btn-toast-rerun" title="Re-run live Sentinel-2 NDVI analysis for this polygon">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <span>Re-run Live NDVI</span>
+      </button>
+    `;
+    searchFeedback.style.display = "flex";
+
+    const btnRerun = document.getElementById("btn-toast-rerun");
+    if (btnRerun) {
+      btnRerun.addEventListener("click", () => {
+        searchFeedback.style.display = "none";
+        executeAnalysisWorkflow(geometry, { studyAreaName: areaName });
+      });
+    }
+
+    feedbackTimer = setTimeout(() => {
+      searchFeedback.style.display = "none";
+    }, 8000);
   }
 
   async function executeSearch() {
