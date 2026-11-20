@@ -66,18 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let isAnalyzing = false;
   let currentAoiState = null;
 
-  // Study Area Name Input in Navbar
-  const navbarAreaInput = document.getElementById("navbar-area-name-input");
-  if (navbarAreaInput) {
-    navbarAreaInput.addEventListener("input", (e) => {
-      const val = e.target.value.trim();
-      drawTool.setStudyAreaName(val);
-      if (currentAoiState) {
-        currentAoiState.studyAreaName = val;
-      }
-    });
-  }
-
   // AOI Diagnostics Card (Geodesic measurements, guardrails, reverse geocode title)
   const aoiCard = new AoiCard("aoi-card-container", {
     onAnalyzeClick: (geometry, info) => {
@@ -91,9 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentAoiState) {
         currentAoiState.studyAreaName = newName;
       }
-      if (navbarAreaInput) {
-        navbarAreaInput.value = newName;
-      }
     }
   });
 
@@ -103,11 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     onGeometryChange: (aoiData) => {
       currentAoiState = aoiData;
       const { geometry, validation, metrics, studyAreaName } = aoiData;
-
-      // Sync navbar study area input if empty and geocode found a name
-      if (navbarAreaInput && !navbarAreaInput.value.trim() && studyAreaName && studyAreaName !== "Custom Study Area") {
-        navbarAreaInput.value = studyAreaName;
-      }
 
       // Hide default empty state, display live diagnostics card
       if (emptyStateEl) emptyStateEl.style.display = "none";
@@ -137,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     onPolygonClear: () => {
       currentAoiState = null;
-      if (navbarAreaInput) navbarAreaInput.value = "";
       if (emptyStateEl) emptyStateEl.style.display = "flex";
       aoiCard.render(null);
       statsPanel.clear();
@@ -160,8 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const inputName = navbarAreaInput && navbarAreaInput.value.trim() ? navbarAreaInput.value.trim() : null;
-    const studyAreaName = inputName || info.studyAreaName || drawTool.studyAreaName || "Custom Selected Area";
+    const searchInput = document.getElementById("search-input");
+    const searchedPlace = searchInput && searchInput.value.trim() ? searchInput.value.trim() : null;
+    const studyAreaName = info.studyAreaName || drawTool.studyAreaName || searchedPlace || "Custom Selected Area";
 
     isAnalyzing = true;
     updateAnalysisLoadingState(true, studyAreaName, geometry, validation);
@@ -441,11 +421,6 @@ document.addEventListener("DOMContentLoaded", () => {
         insightsCard.update(insights);
       }
       legend.setAnalysisData(restoredPayload, geometry);
-
-      // Sync navbar study area input
-      if (navbarAreaInput) {
-        navbarAreaInput.value = areaName;
-      }
 
       // Mount NDVI raster layer if present
       if (record.gee_tile_url) {
