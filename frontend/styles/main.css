@@ -262,29 +262,6 @@ html, body {
   gap: 6px;
 }
 
-.navbar-area-name-input {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  color: var(--text-main);
-  padding: 6px 12px;
-  font-size: 12px;
-  width: 220px;
-  outline: none;
-  transition: all var(--transition-smooth);
-}
-
-.navbar-area-name-input:focus {
-  border-color: var(--accent-gnw-green);
-  background: rgba(15, 23, 42, 0.9);
-  box-shadow: 0 0 0 2px rgba(101, 163, 13, 0.25);
-}
-
-.navbar-area-name-input::placeholder {
-  color: var(--text-muted);
-  font-size: 11px;
-}
-
 .toolbar-btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-subtle);
@@ -2303,9 +2280,6 @@ html, body {
   }
   .navbar-search-box {
     display: none; /* Hide on mobile/tablet to avoid overflow */
-  }
-  .navbar-area-name-input {
-    width: 140px;
   }
   .glass-sidebar {
     width: calc(100vw - 32px);
