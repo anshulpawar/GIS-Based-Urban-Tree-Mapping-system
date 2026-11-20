@@ -5,7 +5,7 @@
  * and service health monitoring.
  */
 
-const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+const API_BASE_URL = typeof window !== "undefined" && (window.location?.hostname === "localhost" || window.location?.hostname === "127.0.0.1")
   ? "http://localhost:8000/api"
   : "/api";
 
@@ -35,8 +35,9 @@ export async function checkSystemHealth() {
 export async function submitAnalyzeRequest(geoJsonPolygon, options = {}) {
   const payload = {
     geometry: geoJsonPolygon,
-    name: options.name || options.run_label || `Analysis Run ${new Date().toLocaleTimeString()}`,
-    run_label: options.run_label || options.name || `Analysis Run ${new Date().toLocaleTimeString()}`,
+    area_name: options.area_name || options.name || options.run_label || "Custom Selected Area",
+    name: options.name || options.run_label || options.area_name || `Analysis Run ${new Date().toLocaleTimeString()}`,
+    run_label: options.run_label || options.name || options.area_name || `Analysis Run ${new Date().toLocaleTimeString()}`,
     area_sqkm: options.area_sqkm ?? null,
     area_ha: options.area_ha ?? null,
     perimeter_km: options.perimeter_km ?? null,
@@ -89,6 +90,50 @@ export async function submitCompareRequest(geoJsonPolygon, historicalDate, optio
     throw new Error(errorData.detail || `Temporal comparison failed with HTTP ${response.status}`);
   }
 
+  return await response.json();
+}
+
+/**
+ * Retrieves the list of saved analysis runs from Supabase PostGIS via the FastAPI backend.
+ * @param {number} [limit=50] - Maximum records to return
+ * @returns {Promise<Array<Object>>}
+ */
+export async function fetchSavedAnalyses(limit = 50) {
+  const response = await fetch(`${API_BASE_URL}/analyses?limit=${limit}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch saved analyses: HTTP ${response.status}`);
+  }
+  return await response.json();
+}
+
+/**
+ * Retrieves a single saved analysis record by ID from Supabase PostGIS.
+ * @param {string} id - Analysis Run UUID
+ * @returns {Promise<Object>}
+ */
+export async function fetchAnalysisById(id) {
+  const response = await fetch(`${API_BASE_URL}/analyses/${id}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to fetch analysis ${id}: HTTP ${response.status}`);
+  }
+  return await response.json();
+}
+
+/**
+ * Deletes a saved analysis run from Supabase PostGIS by ID.
+ * @param {string} id - Analysis Run UUID
+ * @returns {Promise<{status: string, id: string}>}
+ */
+export async function deleteAnalysisById(id) {
+  const response = await fetch(`${API_BASE_URL}/analyses/${id}`, {
+    method: "DELETE"
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to delete analysis ${id}: HTTP ${response.status}`);
+  }
   return await response.json();
 }
 
