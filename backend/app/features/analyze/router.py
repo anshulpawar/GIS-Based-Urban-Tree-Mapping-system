@@ -57,7 +57,11 @@ async def analyze_polygon(request: AnalyzeRequest) -> AnalyzeResponse:
         insights_report = evaluate_environmental_insights(
             mean_ndvi=analysis_result.mean_ndvi,
             green_cover_pct=analysis_result.green_cover_percentage,
-            total_area_hectares=analysis_result.total_area_hectares
+            total_area_hectares=analysis_result.total_area_hectares,
+            dense_pct=analysis_result.stats.dense_pct if analysis_result.stats else None,
+            moderate_pct=analysis_result.stats.moderate_pct if analysis_result.stats else None,
+            sparse_pct=analysis_result.stats.sparse_pct if analysis_result.stats else None,
+            deficit_pct=analysis_result.stats.non_veg_pct if analysis_result.stats else None,
         )
 
         # Attach insights to response summary

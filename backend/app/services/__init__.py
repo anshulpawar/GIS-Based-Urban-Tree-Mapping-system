@@ -13,7 +13,9 @@ from app.services.supabase_service import (
     list_analyses,
     get_analysis_by_id,
     delete_analysis_by_id,
+    update_analysis_insights,
 )
+from app.services.insights_service import generate_ai_insights
 
 __all__ = [
     "initialize_earth_engine",
@@ -25,5 +27,7 @@ __all__ = [
     "list_analyses",
     "get_analysis_by_id",
     "delete_analysis_by_id",
+    "update_analysis_insights",
+    "generate_ai_insights",
 ]
 

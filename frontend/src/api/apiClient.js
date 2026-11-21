@@ -164,3 +164,26 @@ export async function fetchHistoryDetail(id) {
   return await response.json();
 }
 
+/**
+ * Requests AI environmental insights (Gemini 2.5 Flash / Rule Engine) for an analyzed AOI.
+ * @param {Object} metrics - Telemetry metrics (area_name, total_area_hectares, green_cover_percentage, mean_ndvi, etc.)
+ * @returns {Promise<Object>} InsightsResponse payload
+ */
+export async function generateAiInsights(metrics) {
+  const response = await fetch(`${API_BASE_URL}/insights`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(metrics)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to generate insights: HTTP ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+
