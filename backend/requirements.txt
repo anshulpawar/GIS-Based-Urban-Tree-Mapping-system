@@ -5,4 +5,5 @@ pydantic-settings
 earthengine-api
 supabase
 python-dotenv
+httpx
 

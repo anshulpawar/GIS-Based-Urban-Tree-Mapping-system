@@ -14,6 +14,7 @@ import { DashboardView } from "./features/dashboard/dashboardView.js";
 import { AoiCard } from "./features/analysis/aoiCard.js";
 import { StatsPanel } from "./features/dashboard/statsPanel.js";
 import { InsightsCard } from "./features/insights/insightsCard.js";
+import { InsightsModal } from "./features/insights/insightsModal.js";
 import { AoiGeometryEngine } from "./features/map/aoiGeometryEngine.js";
 import { submitAnalyzeRequest, submitCompareRequest } from "./api/apiClient.js";
 
@@ -62,9 +63,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyStateEl = document.getElementById("analysis-empty-state");
   const statsPanel = new StatsPanel("stats-container");
   const insightsCard = new InsightsCard("insights-container");
+  const insightsModal = new InsightsModal("insights-modal");
 
   let isAnalyzing = false;
   let currentAoiState = null;
+  let latestAnalysisTelemetry = null;
+
+  function updateAiInsightsButtonState() {
+    const btnAi = document.getElementById("btn-ai-insights");
+    if (btnAi) {
+      btnAi.disabled = !latestAnalysisTelemetry;
+    }
+  }
+
+  const btnAiInsights = document.getElementById("btn-ai-insights");
+  if (btnAiInsights) {
+    btnAiInsights.addEventListener("click", () => {
+      if (!latestAnalysisTelemetry) {
+        showSearchToast("Please run an analysis first to generate AI insights.", "info");
+        return;
+      }
+      insightsModal.open(latestAnalysisTelemetry);
+    });
+  }
 
   // AOI Diagnostics Card (Geodesic measurements, guardrails, reverse geocode title)
   const aoiCard = new AoiCard("aoi-card-container", {
@@ -100,6 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Clear previous analysis results if geometry changed
+      latestAnalysisTelemetry = null;
+      updateAiInsightsButtonState();
       statsPanel.clear();
       insightsCard.clear();
       legend.clearAnalysisData();
@@ -117,6 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     onPolygonClear: () => {
       currentAoiState = null;
+      latestAnalysisTelemetry = null;
+      updateAiInsightsButtonState();
       if (emptyStateEl) emptyStateEl.style.display = "flex";
       aoiCard.render(null);
       statsPanel.clear();
@@ -196,6 +221,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (analysisResult.insights_summary) {
         insightsCard.update(analysisResult.insights_summary);
       }
+
+      // 5. Store active telemetry for AI Insights Modal
+      latestAnalysisTelemetry = analysisResult;
+      updateAiInsightsButtonState();
 
       showSearchToast(
         `Analysis Complete: ${analysisResult.green_cover_percentage}% Green Cover (${studyAreaName})`,
@@ -307,16 +336,28 @@ document.addEventListener("DOMContentLoaded", () => {
         estimated_trees_needed: treesNeeded,
         recommendations: [
           {
-            title: deficitHa > 0 ? "Targeted Street & Park Tree Infill" : "Canopy Maintenance & Preservation",
+            title: "Sustained Ecological Conservation",
             description:
               deficitHa > 0
-                ? `Calculated ${deficitHa} ha green deficit relative to WHO 30% urban benchmark. Planting shade trees along impervious borders will mitigate localized heat stress.`
-                : `Canopy density currently meets WHO guidelines. Focus on mature canopy protection and irrigation monitoring.`,
+                ? `Canopy cover is currently ${greenCoverPct}% (${((greenCoverPct / 100) * areaHa).toFixed(1)} ha) across the ${areaHa.toFixed(1)} ha area, lagging ${(30.0 - greenCoverPct).toFixed(1)}% behind the WHO 30% standard. Non-vegetated surfaces (${sparsePct}%) increase localized runoff and heat island vulnerability.`
+                : `Canopy coverage stands at an optimal ${greenCoverPct}% (${((greenCoverPct / 100) * areaHa).toFixed(1)} ha of ${areaHa.toFixed(1)} ha), with ${densePct}% dense canopy providing robust microclimate cooling and rainwater absorption.`,
             suggested_action:
               deficitHa > 0
-                ? `Plant ~${treesNeeded.toLocaleString()} native shade saplings across public verges and open lots.`
-                : `Implement seasonal health monitoring via Sentinel-2 time series.`,
-            severity: deficitHa > 5 ? "high" : deficitHa > 0 ? "moderate" : "low"
+                ? `Mandate urban infill planting of ~${treesNeeded.toLocaleString()} native shade saplings across public easements to restore ${deficitHa} ha of canopy.`
+                : `Enact municipal conservation easements and root-zone protection ordinances to shield the ${densePct}% mature dense tree stands from encroachment.`,
+            severity: deficitHa > 5 ? "critical" : deficitHa > 0 ? "warning" : "healthy"
+          },
+          {
+            title: "Canopy Health Monitoring",
+            description:
+              deficitHa > 0
+                ? `Mean NDVI of ${meanNdvi} reflects reduced vegetative vigor and elevated surface heat retention across the ${areaHa.toFixed(1)} ha footprint.`
+                : `Healthy mean NDVI of ${meanNdvi} indicates vigorous vegetative vitality across the ${areaHa.toFixed(1)} ha canopy boundary.`,
+            suggested_action:
+              deficitHa > 0
+                ? `Deploy monthly Sentinel-2 NDVI spectral tracking to monitor canopy moisture stress and measure planting recovery progress.`
+                : `Schedule bi-monthly automated Sentinel-2 NDVI comparative scans to benchmark canopy vitality against the ${meanNdvi} baseline.`,
+            severity: deficitHa > 5 ? "critical" : deficitHa > 0 ? "warning" : "healthy"
           }
         ]
       },
@@ -426,6 +467,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (record.gee_tile_url) {
         ndviLayers.setNdviLayer(record.gee_tile_url, legend.currentOpacity / 100.0);
       }
+
+      // Store recalled run telemetry for AI Insights Modal
+      latestAnalysisTelemetry = restoredPayload;
+      updateAiInsightsButtonState();
 
       // Show non-blocking feedback toast with 1-click Re-run option
       showRecallNotification(areaName, geometry);

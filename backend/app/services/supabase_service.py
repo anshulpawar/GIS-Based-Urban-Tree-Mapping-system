@@ -268,3 +268,41 @@ def delete_analysis_by_id(analysis_id: str) -> bool:
         logger.warning("Error deleting analysis from Supabase: %s", exc)
         return False
 
+
+def update_analysis_insights(analysis_id: str, insights: Any) -> bool:
+    """
+    Updates the generated_insights column of a saved analysis record by UUID.
+
+    Args:
+        analysis_id (str): UUID of the analysis record.
+        insights (Any): Insights payload (dict, list, or string).
+
+    Returns:
+        bool: True if updated successfully, False otherwise.
+    """
+    if not is_supabase_configured():
+        return False
+
+    try:
+        if isinstance(insights, (dict, list)):
+            insights_str = json.dumps(insights)
+        else:
+            insights_str = str(insights)
+
+        headers = get_supabase_headers()
+        url = f"{get_supabase_rest_url('analysis_history')}?id=eq.{analysis_id}"
+        payload = {"generated_insights": insights_str}
+
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.patch(url, headers=headers, json=payload)
+            if resp.status_code in [200, 204]:
+                logger.info("Successfully updated insights for analysis %s in Supabase", analysis_id)
+                return True
+            else:
+                logger.warning("Failed to update insights in Supabase (HTTP %d): %s", resp.status_code, resp.text)
+                return False
+    except Exception as exc:
+        logger.warning("Error updating insights in Supabase: %s", exc)
+        return False
+
+

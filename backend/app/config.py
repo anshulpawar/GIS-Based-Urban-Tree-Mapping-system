@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     GEE_PRIVATE_KEY_PATH: Optional[str] = None
     GEE_PROJECT_ID: Optional[str] = "urban-tree-mapping"
 
+    # Google Gemini AI Configuration
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE_PATH) if ENV_FILE_PATH.exists() else ".env",
         env_file_encoding="utf-8",

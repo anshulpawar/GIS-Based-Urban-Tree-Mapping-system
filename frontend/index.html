@@ -94,6 +94,10 @@
           <i class="fa-solid fa-satellite-dish"></i>
           <span>Analyze Area</span>
         </button>
+        <button id="btn-ai-insights" class="toolbar-btn btn-ai-insights" title="Generate AI Environmental Insights & Action Plan" disabled>
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>AI Insights</span>
+        </button>
       </div>
     </div>
   </header>
@@ -324,6 +328,130 @@
       <div class="modal-footer">
         <span class="modal-footer-caption">GIS Urban Tree Mapping System • Global Nature Watch Alignment</span>
         <button id="btn-modal-dismiss" class="btn-primary-action compact">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       AI Insights & Environmental Action Plan Modal
+       ====================================================================== -->
+  <div id="insights-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-dialog glass-panel insights-modal-dialog">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-wand-magic-sparkles modal-icon highlight-violet"></i>
+          <div>
+            <h2 id="insights-modal-title">AI Urban Canopy Insights</h2>
+            <span id="insights-modal-subtitle" class="modal-subtitle">Sentinel-2 Multispectral Environmental Assessment</span>
+          </div>
+        </div>
+        <button id="btn-close-insights" class="btn-icon-subtle" title="Close dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Active Telemetry Micro-Bar -->
+      <div class="insights-telemetry-bar">
+        <div class="telemetry-chip">
+          <i class="fa-solid fa-location-dot"></i>
+          <span id="ins-chip-area-name">Custom Selected Area</span>
+        </div>
+        <div class="telemetry-chip">
+          <i class="fa-solid fa-vector-square"></i>
+          <span id="ins-chip-total-area">-- ha</span>
+        </div>
+        <div class="telemetry-chip">
+          <i class="fa-solid fa-leaf"></i>
+          <span id="ins-chip-green-pct">--% Green</span>
+        </div>
+        <div class="telemetry-chip">
+          <i class="fa-solid fa-chart-line"></i>
+          <span id="ins-chip-mean-ndvi">NDVI --</span>
+        </div>
+        <div class="telemetry-chip">
+          <i class="fa-solid fa-calendar"></i>
+          <span id="ins-chip-date">Sentinel-2</span>
+        </div>
+      </div>
+
+      <!-- Modal Body with Loading & Content views -->
+      <div class="modal-body insights-modal-body">
+        <!-- Loading State -->
+        <div id="insights-loading" class="insights-loading-state" style="display: none;">
+          <div class="loading-pulse-ring">
+            <i class="fa-solid fa-wand-magic-sparkles fa-spin"></i>
+          </div>
+          <h3>Synthesizing Environmental Telemetry...</h3>
+          <p>Querying Gemini 2.5 Flash with verified Copernicus Sentinel-2 canopy data.</p>
+        </div>
+
+        <!-- Content Container -->
+        <div id="insights-content" class="insights-content-state">
+          <!-- Source & Model Badge -->
+          <div class="insights-meta-banner">
+            <div id="ins-source-badge" class="source-badge badge-gemini">
+              <i class="fa-solid fa-microchip"></i>
+              <span id="ins-source-text">Gemini 2.5 Flash</span>
+            </div>
+            <div class="health-score-badge">
+              <span>Canopy Health Score:</span>
+              <strong id="ins-health-score">--/100</strong>
+            </div>
+          </div>
+
+          <!-- Summary Card -->
+          <div class="insights-summary-card">
+            <div class="summary-headline-row">
+              <h4 id="ins-health-status">Canopy Assessment</h4>
+              <span id="ins-cooling-badge" class="cooling-pill">Cooling: Moderate</span>
+            </div>
+            <p id="ins-summary-text">Executive summary...</p>
+          </div>
+
+          <!-- Target & Deficit Micro-Grid -->
+          <div class="insights-metrics-row">
+            <div class="ins-metric-card deficit-border">
+              <span class="ins-metric-label">Green Deficit (vs WHO 30%)</span>
+              <span id="ins-deficit-ha" class="ins-metric-val highlight-rose">0.0 ha</span>
+            </div>
+            <div class="ins-metric-card target-border">
+              <span class="ins-metric-label">Planting Offset Target</span>
+              <span id="ins-trees-needed" class="ins-metric-val highlight-green">~0 trees</span>
+            </div>
+          </div>
+
+          <!-- Actionable Recommendations Grid -->
+          <div class="insights-section-block">
+            <div class="insights-section-header">
+              <i class="fa-solid fa-bullseye"></i>
+              <span>Priority Urban Forestry Interventions</span>
+            </div>
+            <div id="ins-recommendations-list" class="ins-recommendations-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Full Markdown / Narrative Report -->
+          <div class="insights-section-block">
+            <div class="insights-section-header">
+              <i class="fa-solid fa-file-lines"></i>
+              <span>Full Synthesis Report</span>
+            </div>
+            <div id="ins-markdown-report" class="ins-markdown-view">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer insights-modal-footer">
+        <button id="btn-regenerate-insights" class="btn-subtle" title="Re-query AI insights">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Regenerate</span>
+        </button>
+        <button id="btn-dismiss-insights" class="btn-primary-action compact">Done</button>
       </div>
     </div>
   </div>
