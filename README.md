@@ -81,7 +81,7 @@ urban-tree-mapping/
    ```bash
    # Windows (PowerShell)
    python -m venv venv
-   .\venv\Scripts\Activate.ps1
+   .\.venv\Scripts\Activate.ps1
 
    # Linux / macOS
    python3 -m venv venv
