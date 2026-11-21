@@ -39,7 +39,12 @@ class Settings(BaseSettings):
 
     # Google Gemini AI Configuration
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-3.8-flash"
+    GEMINI_FALLBACK_MODEL: Optional[str] = None
+
+    # Groq AI Configuration (Optional Secondary Fallback)
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE_PATH) if ENV_FILE_PATH.exists() else ".env",

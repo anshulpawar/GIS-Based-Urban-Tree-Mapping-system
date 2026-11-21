@@ -383,7 +383,7 @@
             <i class="fa-solid fa-wand-magic-sparkles fa-spin"></i>
           </div>
           <h3>Synthesizing Environmental Telemetry...</h3>
-          <p>Querying Gemini 2.5 Flash with verified Copernicus Sentinel-2 canopy data.</p>
+          <p>Querying Gemini 3.8 Flash with verified Copernicus Sentinel-2 canopy data.</p>
         </div>
 
         <!-- Content Container -->
@@ -392,7 +392,7 @@
           <div class="insights-meta-banner">
             <div id="ins-source-badge" class="source-badge badge-gemini">
               <i class="fa-solid fa-microchip"></i>
-              <span id="ins-source-text">Gemini 2.5 Flash</span>
+              <span id="ins-source-text">Gemini 3.8 Flash</span>
             </div>
             <div class="health-score-badge">
               <span>Canopy Health Score:</span>
@@ -432,6 +432,21 @@
             </div>
           </div>
 
+          <!-- Recommended Flora & Planting Suitability Block -->
+          <div class="insights-section-block">
+            <div class="insights-section-header">
+              <i class="fa-solid fa-seedling"></i>
+              <span>Recommended Flora & Planting Suitability</span>
+            </div>
+            <div class="ins-transparency-note">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Species suitability guidance is horticultural and urban forestry planning support based on geographic context and Copernicus Sentinel-2 NDVI metrics. Sentinel-2 measures aggregate multispectral reflectance and does not perform individual tree species identification.</span>
+            </div>
+            <div id="ins-flora-list" class="ins-flora-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
           <!-- Full Markdown / Narrative Report -->
           <div class="insights-section-block">
             <div class="insights-section-header">
@@ -447,10 +462,16 @@
 
       <!-- Modal Footer -->
       <div class="modal-footer insights-modal-footer">
-        <button id="btn-regenerate-insights" class="btn-subtle" title="Re-query AI insights">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          <span>Regenerate</span>
-        </button>
+        <div class="modal-footer-left">
+          <button id="btn-regenerate-insights" class="btn-subtle" title="Re-query AI insights">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Regenerate</span>
+          </button>
+          <button id="btn-copy-insights" class="btn-subtle" title="Copy full report to clipboard">
+            <i class="fa-solid fa-copy"></i>
+            <span>Copy Report</span>
+          </button>
+        </div>
         <button id="btn-dismiss-insights" class="btn-primary-action compact">Done</button>
       </div>
     </div>

@@ -165,7 +165,7 @@ export async function fetchHistoryDetail(id) {
 }
 
 /**
- * Requests AI environmental insights (Gemini 2.5 Flash / Rule Engine) for an analyzed AOI.
+ * Requests AI environmental insights (Gemini 3.8 Flash / Rule Engine) for an analyzed AOI.
  * @param {Object} metrics - Telemetry metrics (area_name, total_area_hectares, green_cover_percentage, mean_ndvi, etc.)
  * @returns {Promise<Object>} InsightsResponse payload
  */

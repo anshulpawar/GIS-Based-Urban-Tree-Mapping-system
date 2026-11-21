@@ -30,6 +30,16 @@ class ActionableRecommendation(BaseModel):
     suggested_action: str = Field(..., description="Direct intervention suggested (e.g. street tree planting)")
 
 
+class PlantingRecommendation(BaseModel):
+    """
+    Recommended flora group tailored to the study area's physical profile, climate, and spatial constraints.
+    """
+    plant_type: str = Field(..., description="Classification category (e.g. 'Canopy Shade Trees', 'Urban Street / Avenue Trees')")
+    species_examples: List[str] = Field(default_factory=list, description="List of 2-4 example native or adapted species")
+    why_suited_for_area: str = Field(..., description="Physical rationale grounded in polygon climate, soil, and spatial constraints")
+    area_benefits: str = Field(..., description="Targeted ecological benefits (cooling, runoff absorption, particulate trapping, biodiversity)")
+
+
 class InsightReport(BaseModel):
     """
     Full environmental insight and green-deficit evaluation report.
@@ -62,13 +72,14 @@ class InsightsRequest(BaseModel):
     satellite_date_used: Optional[str] = Field(None, description="Acquisition date of the Sentinel-2 image")
     delta_ndvi: Optional[float] = Field(None, description="Optional temporal change in mean NDVI")
     historical_date: Optional[str] = Field(None, description="Optional historical comparison date")
+    force_regenerate: Optional[bool] = Field(False, description="When False, reuses existing saved insights for analysis_id if available")
 
 
 class InsightsResponse(BaseModel):
     """
     Synthesized environmental insight response combining structured metrics and rich narrative.
     """
-    source: str = Field(..., description="Source of insights: 'gemini' or 'fallback'")
+    source: str = Field(..., description="Source of insights: 'gemini', 'groq', or 'fallback'")
     model_used: str = Field(..., description="Specific model or engine identifier")
     summary: str = Field(..., description="Executive summary of the vegetative assessment")
     health_score: int = Field(..., ge=0, le=100, description="Normalized urban canopy score (0-100)")
@@ -82,6 +93,10 @@ class InsightsResponse(BaseModel):
     recommendations: List[ActionableRecommendation] = Field(
         default_factory=list,
         description="Structured action items with severity ratings"
+    )
+    planting_recommendations: List[PlantingRecommendation] = Field(
+        default_factory=list,
+        description="Tailored tree/shrub/groundcover groups suited for the polygon's profile"
     )
     markdown: str = Field(..., description="Full structured markdown narrative report")
     analysis_id: Optional[str] = Field(None, description="Associated analysis record UUID if provided")

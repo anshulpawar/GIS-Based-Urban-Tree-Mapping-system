@@ -4855,6 +4855,16 @@ body {
   color: #a78bfa;
 }
 
+.badge-groq {
+  background: rgba(249, 115, 22, 0.18);
+  border: 1px solid rgba(251, 146, 60, 0.45);
+  color: #fdba74;
+}
+
+.badge-groq i {
+  color: #fb923c;
+}
+
 .badge-fallback {
   background: rgba(101, 163, 13, 0.18);
   border: 1px solid rgba(163, 230, 53, 0.45);
@@ -5169,4 +5179,132 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.modal-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Recommended Flora & Planting Suitability Styling */
+.ins-transparency-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #bae6fd;
+  margin-bottom: 12px;
+}
+
+.ins-transparency-note i {
+  color: #38bdf8;
+  font-size: 13px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.ins-flora-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.ins-flora-card {
+  border-radius: 8px;
+  padding: 13px 15px;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ins-flora-card:hover {
+  border-color: rgba(167, 139, 250, 0.4);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.ins-flora-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ins-flora-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ins-flora-icon {
+  font-size: 13px;
+  color: #34d399;
+}
+
+.ins-flora-type {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.ins-flora-species-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 1px 0;
+}
+
+.flora-species-chip {
+  font-size: 11px;
+  font-weight: 500;
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 9px;
+  border-radius: 12px;
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+
+.ins-flora-detail-row {
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 10px;
+  border-radius: 5px;
+}
+
+.flora-label {
+  color: #cbd5e1;
+  font-weight: 600;
+  margin-right: 5px;
+}
+
+.flora-label i {
+  color: #a78bfa;
+  font-size: 11px;
+  margin-right: 2px;
+}
+
+.flora-val {
+  color: #94a3b8;
+}
+
+/* Copy Button Success State */
+.btn-subtle.btn-copied {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #34d399 !important;
+}
+
+.btn-subtle.btn-copied i {
+  color: #34d399 !important;
 }
