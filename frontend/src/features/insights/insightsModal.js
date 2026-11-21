@@ -165,13 +165,16 @@ export class InsightsModal {
 
   _renderContent(res) {
     // 1. Source Badge
-    if (this.sourceBadge && this.sourceText) {
+    if (this.sourceBadge) {
       if (res.source === "gemini") {
         this.sourceBadge.className = "source-badge badge-gemini";
-        this.sourceBadge.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i><span>Gemini 2.5 Flash</span>';
+        const modelLabel = res.model_used ? `Gemini AI (${res.model_used})` : "Gemini 2.5 Flash";
+        this.sourceBadge.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i><span>${modelLabel}</span>`;
+        this.sourceBadge.title = "Synthesized dynamically via Google Gemini AI using verified Sentinel-2 NDVI telemetry";
       } else {
         this.sourceBadge.className = "source-badge badge-fallback";
-        this.sourceBadge.innerHTML = '<i class="fa-solid fa-calculator"></i><span>Deterministic Forestry Engine</span>';
+        this.sourceBadge.innerHTML = '<i class="fa-solid fa-calculator"></i><span>Deterministic Rule Engine (Fallback)</span>';
+        this.sourceBadge.title = "Evaluated via municipal urban forestry benchmarks (WHO 30% standard) - Gemini API key inactive or offline";
       }
     }
 

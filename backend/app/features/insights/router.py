@@ -41,7 +41,7 @@ async def generate_insights_endpoint(payload: InsightsRequest) -> InsightsRespon
         # If analysis_id is provided, optionally persist the updated insights into Supabase
         if payload.analysis_id:
             try:
-                update_analysis_insights(payload.analysis_id, response.dict())
+                update_analysis_insights(payload.analysis_id, response.model_dump())
             except Exception as update_err:
                 logger.warning("Failed to update insights in Supabase for %s: %s", payload.analysis_id, update_err)
 

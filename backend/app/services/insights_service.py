@@ -194,14 +194,16 @@ async def generate_ai_insights(req: InsightsRequest) -> InsightsResponse:
     Synthesizes environmental insights using Gemini 2.5 Flash, or falls back to
     the deterministic urban forestry benchmark engine if the key is missing or calls fail.
     """
+    import os
     settings = get_settings()
-    api_key = settings.GEMINI_API_KEY
+    api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
+    model_name = os.getenv("GEMINI_MODEL") or settings.GEMINI_MODEL or "gemini-2.5-flash"
 
-    if not api_key or "placeholder" in api_key.lower():
-        logger.info("GEMINI_API_KEY not configured. Using deterministic urban forestry engine.")
+    if not api_key or not api_key.strip() or "placeholder" in api_key.lower():
+        logger.info("GEMINI_API_KEY not configured or placeholder. Using deterministic urban forestry engine.")
         return _generate_fallback_insights(req)
 
-    url = GEMINI_API_ENDPOINT.format(model=settings.GEMINI_MODEL) + f"?key={api_key}"
+    url = GEMINI_API_ENDPOINT.format(model=model_name) + f"?key={api_key.strip()}"
     prompt_text = _build_grounded_prompt(req)
 
     request_body = {
@@ -219,13 +221,14 @@ async def generate_ai_insights(req: InsightsRequest) -> InsightsResponse:
     }
 
     try:
+        logger.info("Calling Gemini REST API (%s) for AOI '%s'...", model_name, req.area_name)
         async with httpx.AsyncClient(timeout=18.0) as client:
             resp = await client.post(url, json=request_body)
             if resp.status_code != 200:
                 logger.warning(
-                    "Gemini API returned status %d: %s. Falling back to deterministic engine.",
+                    "Gemini API returned HTTP %d: %s. Falling back to deterministic engine.",
                     resp.status_code,
-                    resp.text[:200]
+                    resp.text[:250]
                 )
                 return _generate_fallback_insights(req)
 
@@ -271,9 +274,10 @@ async def generate_ai_insights(req: InsightsRequest) -> InsightsResponse:
                     )
                 )
 
+            logger.info("Successfully synthesized grounded insights via Gemini AI (%s).", model_name)
             return InsightsResponse(
                 source="gemini",
-                model_used=settings.GEMINI_MODEL,
+                model_used=model_name,
                 summary=parsed.get("summary", "Analysis completed successfully."),
                 health_score=int(parsed.get("health_score", 70)),
                 overall_health_status=parsed.get("overall_health_status", "Evaluated Canopy"),
@@ -289,5 +293,5 @@ async def generate_ai_insights(req: InsightsRequest) -> InsightsResponse:
             )
 
     except Exception as exc:
-        logger.warning("Error invoking Gemini API (%s). Falling back to deterministic engine.", exc)
+        logger.warning("Error invoking Gemini API (%s). Falling back cleanly to deterministic engine.", exc)
         return _generate_fallback_insights(req)
