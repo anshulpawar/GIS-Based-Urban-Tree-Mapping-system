@@ -63,7 +63,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyStateEl = document.getElementById("analysis-empty-state");
   const statsPanel = new StatsPanel("stats-container");
   const insightsCard = new InsightsCard("insights-container");
-  const insightsModal = new InsightsModal("insights-modal");
+  const insightsModal = new InsightsModal("insights-modal", {
+    getMapSnapshot: async (telemetry) => {
+      const geom = telemetry?.geometry || currentAoiState?.geometry || drawTool.getGeometry();
+      return await mapManager.getMapSnapshot(geom);
+    }
+  });
 
   let isAnalyzing = false;
   let currentAoiState = null;
@@ -223,6 +228,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // 5. Store active telemetry for AI Insights Modal
+      analysisResult.id = analysisResult.analysis_id;
+      analysisResult.geometry = geometry;
       latestAnalysisTelemetry = analysisResult;
       updateAiInsightsButtonState();
 
@@ -426,6 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const restoredPayload = {
         status: "success",
         analysis_id: record.id,
+        id: record.id,
         area_name: areaName,
         run_label: areaName,
         studyAreaName: areaName,
@@ -437,6 +445,10 @@ document.addEventListener("DOMContentLoaded", () => {
         total_area_sq_meters: Math.round(totalHa * 10000),
         mean_ndvi: meanNdvi,
         green_cover_percentage: greenPct,
+        dense_pct: denseVal,
+        moderate_pct: modVal,
+        sparse_pct: sparseVal,
+        deficit_pct: deficitVal,
         stats: {
           mean_ndvi: meanNdvi,
           green_cover_pct: greenPct,
@@ -457,6 +469,11 @@ document.addEventListener("DOMContentLoaded", () => {
         geometry: geometry
       };
 
+      if (insights && (insights.markdown || (insights.recommendations && insights.recommendations.length > 0))) {
+        restoredPayload._cachedInsights = insights;
+        restoredPayload.generated_insights = insights;
+      }
+
       statsPanel.update(restoredPayload);
       if (insights) {
         insightsCard.update(insights);
@@ -466,6 +483,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Mount NDVI raster layer if present
       if (record.gee_tile_url) {
         ndviLayers.setNdviLayer(record.gee_tile_url, legend.currentOpacity / 100.0);
+      }
+
+      // Synchronize current AOI state with recalled record identifier
+      if (currentAoiState) {
+        currentAoiState.analysis_id = record.id;
+        currentAoiState.id = record.id;
       }
 
       // Store recalled run telemetry for AI Insights Modal

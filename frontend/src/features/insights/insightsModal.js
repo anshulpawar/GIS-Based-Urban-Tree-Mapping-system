@@ -5,10 +5,12 @@
  */
 
 import { generateAiInsights } from "../../api/apiClient.js";
+import { generatePdfReport } from "./pdfReportGenerator.js";
 
 export class InsightsModal {
-  constructor(modalId = "insights-modal") {
+  constructor(modalId = "insights-modal", options = {}) {
     this.modalEl = document.getElementById(modalId);
+    this.getMapSnapshot = options.getMapSnapshot || null;
     this.currentTelemetry = null;
     this.isLoading = false;
     this.insightsCache = new Map();
@@ -17,7 +19,7 @@ export class InsightsModal {
     this.btnClose = document.getElementById("btn-close-insights");
     this.btnDismiss = document.getElementById("btn-dismiss-insights");
     this.btnRegenerate = document.getElementById("btn-regenerate-insights");
-    this.btnCopy = document.getElementById("btn-copy-insights");
+    this.btnDownload = document.getElementById("btn-download-insights");
 
     // Chips
     this.chipAreaName = document.getElementById("ins-chip-area-name");
@@ -43,6 +45,18 @@ export class InsightsModal {
     this.floraList = document.getElementById("ins-flora-list");
     this.markdownReport = document.getElementById("ins-markdown-report");
 
+    // Score Breakdown & Improvements targets
+    this.scoreBandPill = document.getElementById("ins-score-band-pill");
+    this.ndviPtsEl = document.getElementById("ins-ndvi-pts");
+    this.ndviBar = document.getElementById("ins-ndvi-bar");
+    this.ndviCalcSub = document.getElementById("ins-ndvi-calc-sub");
+    this.coverPtsEl = document.getElementById("ins-cover-pts");
+    this.coverBar = document.getElementById("ins-cover-bar");
+    this.coverCalcSub = document.getElementById("ins-cover-calc-sub");
+    this.scoreExplanation = document.getElementById("ins-score-explanation");
+    this.projectedUpliftBadge = document.getElementById("ins-projected-uplift-badge");
+    this.improvementStepsContainer = document.getElementById("ins-improvement-steps");
+
     this.currentResponse = null;
 
     this._bindEvents();
@@ -62,8 +76,8 @@ export class InsightsModal {
         }
       });
     }
-    if (this.btnCopy) {
-      this.btnCopy.addEventListener("click", () => this.copyReportToClipboard());
+    if (this.btnDownload) {
+      this.btnDownload.addEventListener("click", () => this.downloadReportPdf());
     }
 
     // Close on backdrop click
@@ -111,15 +125,12 @@ export class InsightsModal {
     this.modalEl.style.display = "flex";
 
     const cacheKey = this._getCacheKey(telemetry);
-    if (telemetry._cachedInsights) {
-      if (cacheKey) this.insightsCache.set(cacheKey, telemetry._cachedInsights);
-      this._renderContent(telemetry._cachedInsights);
-      if (this.loadingView) this.loadingView.style.display = "none";
-      if (this.contentView) this.contentView.style.display = "block";
-      return;
-    }
-    if (cacheKey && this.insightsCache.has(cacheKey)) {
-      this._renderContent(this.insightsCache.get(cacheKey));
+    const cached = telemetry._cachedInsights || telemetry.generated_insights || (cacheKey && this.insightsCache.get(cacheKey));
+    if (cached && (cached.markdown || (cached.recommendations && cached.recommendations.length > 0))) {
+      if (cacheKey) this.insightsCache.set(cacheKey, cached);
+      telemetry._cachedInsights = cached;
+      telemetry.generated_insights = cached;
+      this._renderContent(cached);
       if (this.loadingView) this.loadingView.style.display = "none";
       if (this.contentView) this.contentView.style.display = "block";
       return;
@@ -198,6 +209,7 @@ export class InsightsModal {
         this.insightsCache.set(cacheKey, response);
       }
       this.currentTelemetry._cachedInsights = response;
+      this.currentTelemetry.generated_insights = response;
       this._renderContent(response);
     } catch (err) {
       console.error("AI Insights fetch failed:", err);
@@ -348,99 +360,144 @@ export class InsightsModal {
       this.markdownReport.innerHTML = this._renderMarkdown(res.markdown || "");
     }
 
+    // 9. Score Breakdown & Improvement Pathways
+    this._renderScoreBreakdownAndImprovements(this.currentTelemetry, res);
+
     this.currentResponse = res;
   }
 
-  /**
-   * Formats and copies the complete synthesized insights report to clipboard with user feedback.
-   */
-  async copyReportToClipboard() {
-    if (!this.currentResponse || !this.currentTelemetry) return;
-
-    const res = this.currentResponse;
-    const t = this.currentTelemetry;
+  _renderScoreBreakdownAndImprovements(t, res) {
+    if (!t) return;
     const stats = t.stats || {};
-    const areaName = t.area_name || t.run_label || t.studyAreaName || "Custom Selected Area";
-    const totalHa = Number(t.total_area_hectares || stats.area_ha || 0).toFixed(1);
-    const greenPct = Number(t.green_cover_percentage || stats.green_cover_pct || 0).toFixed(1);
-    const meanNdvi = Number(t.mean_ndvi || stats.mean_ndvi || 0).toFixed(3);
-    const satDate = (t.satellite_date_used || t.acquisition_date || "Sentinel-2").toString().split("T")[0];
+    const meanNdvi = Number(t.mean_ndvi != null ? t.mean_ndvi : stats.mean_ndvi || 0.0);
+    const greenPct = Number(t.green_cover_percentage != null ? t.green_cover_percentage : stats.green_cover_pct || 0.0);
 
-    const recs = (res.recommendations || []).map((r, idx) => (
-      `### ${idx + 1}. ${r.title} [${(r.severity || "MODERATE").toUpperCase()}]\n` +
-      `- **Diagnosis**: ${r.description}\n` +
-      `- **Suggested Action**: ${r.suggested_action}`
-    )).join("\n\n");
+    const ndviPts = Math.min(60.0, Math.max(0.0, meanNdvi * 60.0)).toFixed(1);
+    const coverPts = Math.min(40.0, Math.max(0.0, greenPct * 0.4)).toFixed(1);
+    const totalScore = res.health_score ?? Math.round(Number(ndviPts) + Number(coverPts));
 
-    const flora = (res.planting_recommendations || []).map((f) => (
-      `### ${f.plant_type}\n` +
-      `- **Recommended Species**: ${(f.species_examples || []).join(", ")}\n` +
-      `- **Site & Soil Suitability**: ${f.why_suited_for_area}\n` +
-      `- **Targeted Ecological Benefits**: ${f.area_benefits}`
-    )).join("\n\n");
+    // Update Formula Values & Bars
+    if (this.ndviPtsEl) this.ndviPtsEl.textContent = `${ndviPts} / 60.0 pts`;
+    if (this.ndviBar) this.ndviBar.style.width = `${Math.min(100, (Number(ndviPts) / 60.0) * 100)}%`;
+    if (this.ndviCalcSub) this.ndviCalcSub.textContent = `Calculated: ${meanNdvi.toFixed(3)} × 60.0 pts weight`;
 
-    const fullMarkdown = [
-      `# AI Urban Canopy Insights & Action Plan: ${areaName}`,
-      ``,
-      `> Generated via ${res.source === "gemini" ? "Google Gemini AI (" + res.model_used + ")" : res.source === "groq" ? "Groq AI (" + res.model_used + ")" : "Deterministic Urban Forestry Rule Engine"} grounded in Copernicus Sentinel-2 multispectral NDVI telemetry.`,
-      ``,
-      `## Telemetry & Municipal Canopy Diagnostics`,
-      `- **Study Area**: ${areaName}`,
-      `- **Sentinel-2 Date**: ${satDate}`,
-      `- **Total Surface Area**: ${totalHa} ha`,
-      `- **Green Vegetation Cover**: ${greenPct}%`,
-      `- **Mean NDVI**: ${meanNdvi}`,
-      `- **Canopy Health Score**: ${res.health_score}/100 (${res.overall_health_status})`,
-      `- **Urban Cooling Rating**: ${res.cooling_capacity_index || "Moderate"}`,
-      `- **Green Deficit (vs WHO 30%)**: ${res.green_deficit_hectares != null ? Number(res.green_deficit_hectares).toFixed(1) : "0.0"} ha`,
-      `- **Target Infill Planting**: ~${(res.estimated_trees_needed || 0).toLocaleString()} native trees`,
-      ``,
-      `## Executive Summary`,
-      res.summary || "Evaluation completed.",
-      ``,
-      `## Priority Urban Forestry Interventions`,
-      recs || "No critical interventions required.",
-      ``,
-      `## Recommended Flora & Planting Suitability`,
-      `*Species suitability guidance is horticultural and urban forestry planning support based on geographic context and Copernicus Sentinel-2 NDVI metrics.*`,
-      ``,
-      flora || "No tailored flora data available.",
-      ``,
-      `## Detailed Scientific Synthesis Report`,
-      res.markdown || "",
-      ``,
-      `---`,
-      `*Urban Tree Mapping Platform - Sentinel-2 Multispectral Urban Forestry Analytics*`
-    ].join("\n");
+    if (this.coverPtsEl) this.coverPtsEl.textContent = `${coverPts} / 40.0 pts`;
+    if (this.coverBar) this.coverBar.style.width = `${Math.min(100, (Number(coverPts) / 40.0) * 100)}%`;
+    if (this.coverCalcSub) this.coverCalcSub.textContent = `Calculated: ${greenPct.toFixed(1)}% × 0.4 pts weight`;
 
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(fullMarkdown);
+    // Significance Band
+    if (this.scoreBandPill) {
+      let bandText = "MODERATE CANOPY (45–64)";
+      let bandClass = "band-moderate";
+      if (totalScore >= 80) {
+        bandText = "OPTIMAL CANOPY (80–100)";
+        bandClass = "band-optimal";
+      } else if (totalScore >= 65) {
+        bandText = "GOOD CANOPY (65–79)";
+        bandClass = "band-good";
+      } else if (totalScore < 45) {
+        bandText = "CRITICAL DEFICIT (< 45)";
+        bandClass = "band-critical";
+      }
+      this.scoreBandPill.textContent = bandText;
+      this.scoreBandPill.className = `score-band-pill ${bandClass}`;
+    }
+
+    // Explanation Note
+    if (this.scoreExplanation) {
+      if (greenPct >= 50 && totalScore < 65) {
+        this.scoreExplanation.textContent = `Why is the score ${totalScore}/100 despite ${greenPct.toFixed(0)}% green cover? Green cover provides up to 40 points for surface coverage (grass, shrubs, sparse trees), while photosynthetic vigor (NDVI) carries 60 points. A score in the 50–60 range indicates acceptable surface vegetation coverage but low canopy density or moisture stress, pointing to high-LAI shade tree infill as the primary opportunity.`;
+      } else if (totalScore >= 65) {
+        this.scoreExplanation.textContent = `This canopy demonstrates balanced photosynthetic vigor (${ndviPts} pts) and strong spatial coverage (${coverPts} pts). Continued preservation of mature trees will sustain municipal cooling and stormwater absorption.`;
       } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = fullMarkdown;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
+        this.scoreExplanation.textContent = `This polygon reflects high non-vegetated deficit and reduced canopy vigor. Prioritize targeted native tree infill and soil de-paving to elevate both NDVI photosynthetic points and green cover surface points.`;
       }
+    }
 
-      if (this.btnCopy) {
-        const origHtml = this.btnCopy.innerHTML;
-        this.btnCopy.innerHTML = '<i class="fa-solid fa-check"></i><span>Copied!</span>';
-        this.btnCopy.classList.add("btn-copied");
-        setTimeout(() => {
-          if (this.btnCopy) {
-            this.btnCopy.innerHTML = origHtml;
-            this.btnCopy.classList.remove("btn-copied");
-          }
-        }, 2200);
-      }
+    // Projected Uplift Badge
+    if (this.projectedUpliftBadge) {
+      const targetGain = totalScore < 50 ? "+16 to +22 pts" : totalScore < 70 ? "+12 to +16 pts" : "+6 to +10 pts";
+      this.projectedUpliftBadge.textContent = `${targetGain} Projected Uplift`;
+    }
+
+    // Improvement Steps
+    if (this.improvementStepsContainer) {
+      const deficitHa = res.green_deficit_hectares != null ? Number(res.green_deficit_hectares).toFixed(1) : "0.0";
+      const treesNeeded = (res.estimated_trees_needed || 0).toLocaleString();
+
+      this.improvementStepsContainer.innerHTML = `
+        <div class="improvement-step-card">
+          <div class="step-title-group">
+            <div class="step-icon"><i class="fa-solid fa-tree"></i></div>
+            <div>
+              <div class="step-title">Infill with High-LAI Native Shade Trees</div>
+              <div class="step-impact">+10 to +15 NDVI Points</div>
+            </div>
+          </div>
+          <p class="step-desc">Introduce broadleaf canopy species (such as Neem, Rain Tree, or native Oak) in open and sparse zones. Elevating photosynthetic leaf density directly raises mean NDVI toward 0.65+.</p>
+        </div>
+
+        <div class="improvement-step-card">
+          <div class="step-title-group">
+            <div class="step-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+              <div class="step-title">Multi-Tiered Understory Shrub Buffers</div>
+              <div class="step-impact">+4 to +7 Resilience Points</div>
+            </div>
+          </div>
+          <p class="step-desc">Establish mid-story shrubs and drought-resilient groundcover beneath existing tree canopies to retain soil moisture, reduce solar soil heating, and protect root health during dry spells.</p>
+        </div>
+
+        <div class="improvement-step-card">
+          <div class="step-title-group">
+            <div class="step-icon"><i class="fa-solid fa-road-barrier"></i></div>
+            <div>
+              <div class="step-title">Non-Vegetated Easement & Bioswale Conversion</div>
+              <div class="step-impact">+5 to +9 Spatial Points</div>
+            </div>
+          </div>
+          <p class="step-desc">Convert paved margins, utility easements, and roadside buffers (${deficitHa} ha deficit) into vegetated bioswales to recover spatial green coverage toward the WHO 30% municipal benchmark (~${treesNeeded} trees).</p>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Generates and downloads a complete multi-section researcher PDF study report.
+   */
+  async downloadReportPdf() {
+    if (!this.currentResponse || !this.currentTelemetry) return;
+    if (!this.btnDownload) return;
+
+    const originalHtml = this.btnDownload.innerHTML;
+    try {
+      this.btnDownload.disabled = true;
+      this.btnDownload.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Generating PDF...</span>';
+
+      const mapSnapshot = this.getMapSnapshot ? await this.getMapSnapshot(this.currentTelemetry) : null;
+
+      await generatePdfReport({
+        telemetry: this.currentTelemetry,
+        insights: this.currentResponse,
+        mapSnapshot: mapSnapshot
+      });
+
+      this.btnDownload.innerHTML = '<i class="fa-solid fa-check"></i><span>Downloaded!</span>';
+      this.btnDownload.classList.add("btn-downloaded");
+      setTimeout(() => {
+        if (this.btnDownload) {
+          this.btnDownload.innerHTML = originalHtml;
+          this.btnDownload.classList.remove("btn-downloaded");
+          this.btnDownload.disabled = false;
+        }
+      }, 2200);
     } catch (err) {
-      console.error("Failed to copy insights report to clipboard:", err);
+      console.error("PDF generation failed:", err);
+      alert("Failed to generate PDF report: " + (err.message || err));
+      if (this.btnDownload) {
+        this.btnDownload.innerHTML = originalHtml;
+        this.btnDownload.disabled = false;
+      }
     }
   }
 

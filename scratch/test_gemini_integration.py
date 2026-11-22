@@ -474,6 +474,48 @@ with patch('app.features.insights.router.get_analysis_by_id', return_value=saved
     assert mock_update.call_args[0][0] == "analysis-test-uuid-1234"
     print('Router force_regenerate=True OK: Bypassed cache, generated fresh, and updated Supabase.')
 
+# 9. Test Health Score Mathematical Clarity & Significance Bands
+# Case A: High Green Cover (65%) with Moderate NDVI (0.50) -> 56/100 (Moderate band 45–64)
+# Demonstrates why scores in 50-60 range occur despite high green cover:
+# NDVI vigor weight (0.50 * 60 = 30 pts) + green cover weight (65 * 0.4 = 26 pts) = 56 pts.
+bench_moderate = evaluate_environmental_insights(
+    mean_ndvi=0.50,
+    green_cover_pct=65.0,
+    total_area_hectares=100.0
+)
+ndvi_pts_a = round(0.50 * 60.0, 1) # 30.0
+cover_pts_a = round(65.0 * 0.4, 1) # 26.0
+assert bench_moderate.health_score == 56
+assert ndvi_pts_a == 30.0
+assert cover_pts_a == 26.0
+assert 45 <= bench_moderate.health_score < 65, "Expected Moderate canopy band"
+print(f"Health Score Clarity Case A (Moderate: 56/100): NDVI={ndvi_pts_a}pts, Cover={cover_pts_a}pts -> Verified OK.")
+
+# Case B: Critical Deficit (Green Cover 18%, Mean NDVI 0.22) -> 20/100 (Critical band < 45)
+bench_critical = evaluate_environmental_insights(
+    mean_ndvi=0.22,
+    green_cover_pct=18.0,
+    total_area_hectares=100.0
+)
+ndvi_pts_b = round(0.22 * 60.0, 1) # 13.2
+cover_pts_b = round(18.0 * 0.4, 1) # 7.2
+assert bench_critical.health_score == 20
+assert bench_critical.health_score < 45, "Expected Critical band"
+assert bench_critical.green_deficit_hectares == 12.0 # WHO 30% - 18% = 12% of 100ha
+print(f"Health Score Clarity Case B (Critical: 20/100): NDVI={ndvi_pts_b}pts, Cover={cover_pts_b}pts -> Verified OK.")
+
+# Case C: Optimal Canopy (Green Cover 85%, Mean NDVI 0.78) -> 80/100 (Optimal band >= 80)
+bench_optimal = evaluate_environmental_insights(
+    mean_ndvi=0.78,
+    green_cover_pct=85.0,
+    total_area_hectares=100.0
+)
+ndvi_pts_c = round(0.78 * 60.0, 1) # 46.8
+cover_pts_c = round(85.0 * 0.4, 1) # 34.0
+assert bench_optimal.health_score == 80
+assert bench_optimal.health_score >= 80, "Expected Optimal band"
+print(f"Health Score Clarity Case C (Optimal: 80/100): NDVI={ndvi_pts_c}pts, Cover={cover_pts_c}pts -> Verified OK.")
+
 # Clean up
 os.environ.pop('GEMINI_API_KEY', None)
 os.environ.pop('GEMINI_FALLBACK_MODEL', None)
