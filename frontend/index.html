@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Urban GreenWatch | Sentinel-2 NDVI Global Assessment</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>" />
 
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,6 +39,7 @@
 
   <!-- Application Styling -->
   <link rel="stylesheet" href="./styles/main.css" />
+  <link rel="stylesheet" href="./styles/editorial.css" />
 </head>
 <body>
 
@@ -53,7 +55,10 @@
 
     <!-- Primary Navigation Links -->
     <nav class="navbar-nav-links">
-      <button id="nav-btn-map" class="nav-link active" title="Interactive World Map View">
+      <button id="nav-btn-about" class="nav-link active" title="About Urban GreenWatch">
+        ABOUT
+      </button>
+      <button id="nav-btn-map" class="nav-link" title="Interactive World Map View">
         MAP
       </button>
       <button id="nav-btn-dashboard" class="nav-link" title="Analytics & History Dashboard">
@@ -110,9 +115,337 @@
   <div id="search-feedback" class="search-feedback-toast" style="display: none;"></div>
 
   <!-- ======================================================================
+       0. Visual About Landing Page (Default View on App Load)
+       ====================================================================== -->
+  <section id="about-view" class="view-container active">
+    <!-- 1. Full-Bleed Orbital Satellite Hero Banner -->
+    <div id="about-hero" class="about-hero">
+      <div class="hero-content-wrapper">
+        <div class="hero-kicker-pill">
+          <span class="kicker-dot"></span>
+          <span>Copernicus Sentinel-2 • 10m Multispectral Telemetry</span>
+        </div>
+        <h1 class="hero-title">
+          Urban GreenWatch: <span class="hero-title-accent">On-Demand Canopy &amp; Deficit Intelligence</span>
+        </h1>
+        <p class="hero-subtitle">
+          Empowering cities, municipal foresters, and environmental researchers with live 10-meter satellite vegetation analytics, deterministic canopy health scoring, and automated WHO 30% green-deficit action planning.
+        </p>
+        <p class="hero-desc">
+          By combining European Space Agency Copernicus Sentinel-2 Level-2A imagery with planetary-scale Google Earth Engine processing, Urban GreenWatch transforms multispectral surface reflectance into transparent, empirical urban forestry insights—free from black-box guesswork.
+        </p>
+        <div class="hero-actions-row">
+          <button id="btn-hero-launch-map" class="btn-hero-primary" title="Launch Interactive Map Workspace">
+            <i class="fa-solid fa-earth-americas"></i>
+            <span>Launch Interactive Map &rarr;</span>
+          </button>
+          <button id="btn-hero-methodology" class="btn-hero-secondary" title="Explore Scientific Methodology">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Explore Methodology</span>
+          </button>
+        </div>
+        <div class="hero-telemetry-chips">
+          <div class="telemetry-chip-badge">
+            <i class="fa-solid fa-satellite"></i>
+            <span>10m Optical Resolution</span>
+          </div>
+          <div class="telemetry-chip-badge">
+            <i class="fa-solid fa-cloud-sun"></i>
+            <span>Cloud-Masked L2A</span>
+          </div>
+          <div class="telemetry-chip-badge">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Deterministic NDVI</span>
+          </div>
+          <div class="telemetry-chip-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Zero Black-Box Guesswork</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Horizontal Section Anchor Strip -->
+    <nav class="about-anchor-strip" aria-label="About page section navigation">
+      <button class="anchor-btn" data-target="sec-how-it-works">How It Works</button>
+      <button class="anchor-btn" data-target="sec-why-it-matters">Why It Matters</button>
+      <button class="anchor-btn" data-target="sec-capabilities">Capabilities</button>
+      <button class="anchor-btn" data-target="sec-powered-by">Powered By</button>
+      <button class="anchor-btn" data-target="sec-mission">Project Mission</button>
+    </nav>
+
+    <!-- 3. Visual 4-Step Workflow Strip ("How It Works") -->
+    <section id="sec-how-it-works" class="editorial-container">
+      <span class="section-kicker">WORKFLOW ARCHITECTURE</span>
+      <h2 class="section-heading-lg">From Orbital Satellite to Local Action in 4 Steps</h2>
+      <p class="section-subheading">
+        Every analysis execution runs a verified remote sensing pipeline that extracts radiometric surface reflectance directly for your defined polygon boundary.
+      </p>
+
+      <div class="workflow-grid">
+        <div class="workflow-card">
+          <div class="workflow-card-top">
+            <div class="workflow-icon-box">
+              <i class="fa-solid fa-magnifying-glass-location"></i>
+            </div>
+            <span class="workflow-step-num">01</span>
+          </div>
+          <h3 class="workflow-card-title">Locate Any City</h3>
+          <p class="workflow-card-desc">
+            Search any city, ward, or geographic coordinate worldwide with instant fly-to camera navigation and global vector basemap alignment.
+          </p>
+        </div>
+
+        <div class="workflow-card">
+          <div class="workflow-card-top">
+            <div class="workflow-icon-box">
+              <i class="fa-solid fa-draw-polygon"></i>
+            </div>
+            <span class="workflow-step-num">02</span>
+          </div>
+          <h3 class="workflow-card-title">Draw Custom AOI</h3>
+          <p class="workflow-card-desc">
+            Draw custom municipal or parcel boundaries with live Turf.js geodesic area and perimeter computation, verified by geodetic guardrails.
+          </p>
+        </div>
+
+        <div class="workflow-card">
+          <div class="workflow-card-top">
+            <div class="workflow-icon-box">
+              <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <span class="workflow-step-num">03</span>
+          </div>
+          <h3 class="workflow-card-title">Live Sentinel-2 NDVI</h3>
+          <p class="workflow-card-desc">
+            Trigger on-demand Google Earth Engine zonal reduction with SCL/QA60 cloud masking, generating calibrated NDVI rasters and multi-date change telemetry.
+          </p>
+        </div>
+
+        <div class="workflow-card">
+          <div class="workflow-card-top">
+            <div class="workflow-icon-box">
+              <i class="fa-solid fa-file-pdf"></i>
+            </div>
+            <span class="workflow-step-num">04</span>
+          </div>
+          <h3 class="workflow-card-title">AI Synthesis &amp; Study PDF</h3>
+          <p class="workflow-card-desc">
+            Receive deterministic canopy health scores, WHO 30% gap offsets, native flora recommendations, and export a researcher-grade A4 study PDF report.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 50/50 Editorial Split Showcase ("Why It Matters") -->
+    <section id="sec-why-it-matters" class="editorial-container">
+      <div class="editorial-split-grid">
+        <div class="split-editorial-copy">
+          <div>
+            <span class="section-kicker">THE URBAN GREENING CHALLENGE</span>
+            <h2 class="section-heading-lg">Why On-Demand Satellite Telemetry Matters</h2>
+            <p class="section-subheading" style="margin-bottom: 24px;">
+              Traditional municipal tree inventories are costly, slow, and outdated before publication. Urban GreenWatch brings continuous orbital sensing into municipal decision-making.
+            </p>
+          </div>
+
+          <div class="editorial-pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-dot"></span>
+              <h3 class="pillar-title">Real-Time Transparency</h3>
+            </div>
+            <p class="pillar-text">
+              Instead of relying on 3–5 year manual sample surveys, analyze fresh Copernicus Sentinel-2 acquisitions captured every 5 days, accurately reflecting seasonal greening and recent development impacts.
+            </p>
+          </div>
+
+          <div class="editorial-pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-dot"></span>
+              <h3 class="pillar-title">Deterministic Precision</h3>
+            </div>
+            <p class="pillar-text">
+              Every canopy percentage is grounded in standard Normalized Difference Vegetation Index math (B8 - B4)/(B8 + B4) and calibrated 4-tier density bins—never black-box synthetic hallucinations.
+            </p>
+          </div>
+
+          <div class="editorial-pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-dot"></span>
+              <h3 class="pillar-title">Actionable Urban Planning</h3>
+            </div>
+            <p class="pillar-text">
+              Automatically compares analyzed areas against the World Health Organization (WHO) 30% green canopy benchmark, calculating exact planting offsets (~400 shade trees/ha of deficit) and native species suitability.
+            </p>
+          </div>
+        </div>
+
+        <div class="split-showcase-visual">
+          <img
+            src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1200&q=80"
+            alt="Aerial view of urban canopy corridors and green city infrastructure"
+            class="split-showcase-img"
+            loading="lazy"
+          />
+          <div class="showcase-floating-overlay">
+            <div class="floating-metric-pills">
+              <div class="glass-metric-pill">
+                <i class="fa-solid fa-satellite"></i>
+                <span>10m Sentinel-2 Surface Reflectance</span>
+              </div>
+              <div class="glass-metric-pill">
+                <i class="fa-solid fa-bullseye"></i>
+                <span>WHO 30% Municipal Benchmark</span>
+              </div>
+              <div class="glass-metric-pill">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Deterministic Canopy Health Index (0–100)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Photo-Led Capabilities Cards ("Capabilities & Impact") -->
+    <section id="sec-capabilities" class="editorial-container">
+      <span class="section-kicker">CAPABILITIES &amp; IMPACT</span>
+      <h2 class="section-heading-lg">Tailored for Municipalities, Planners &amp; Scholars</h2>
+      <p class="section-subheading">
+        Discover how different stakeholders leverage Urban GreenWatch to monitor ecological assets, mitigate urban heat, and publish empirical study reports.
+      </p>
+
+      <div class="capabilities-grid">
+        <div class="capability-card">
+          <div class="capability-img-box">
+            <img
+              src="https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80"
+              alt="Urban forestry and street tree canopy mapping"
+              class="capability-img"
+              loading="lazy"
+            />
+            <span class="capability-badge-tag">Municipal Forestry</span>
+          </div>
+          <div class="capability-body">
+            <h3 class="capability-title">Canopy Deficit &amp; Planting Target Allocation</h3>
+            <p class="capability-desc">
+              Identify low-canopy urban wards failing the WHO 30% standard. Calculate exact reforestation requirements (~400 shade trees per hectare of deficit) and target planting budgets where canopy voids are highest.
+            </p>
+            <button class="btn-card-action" data-action="map">
+              <i class="fa-solid fa-earth-americas"></i>
+              <span>Launch Map &rarr;</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="capability-card">
+          <div class="capability-img-box">
+            <img
+              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80"
+              alt="Urban heat island microclimate and impervious built-up infrastructure"
+              class="capability-img"
+              loading="lazy"
+            />
+            <span class="capability-badge-tag">Microclimate Resilience</span>
+          </div>
+          <div class="capability-body">
+            <h3 class="capability-title">Urban Heat Island &amp; Impervious Analysis</h3>
+            <p class="capability-desc">
+              Distinguish heat-trapping impervious built-up zones (NDVI &lt; 0.20) from cool vegetative buffers. Run multi-date temporal comparisons to detect canopy degradation, tree clearance, or park expansion.
+            </p>
+            <button class="btn-card-action" data-action="dashboard">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>View Dashboard &rarr;</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="capability-card">
+          <div class="capability-img-box">
+            <img
+              src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80"
+              alt="Satellite Earth observation data and research reporting"
+              class="capability-img"
+              loading="lazy"
+            />
+            <span class="capability-badge-tag">Academic Research</span>
+          </div>
+          <div class="capability-body">
+            <h3 class="capability-title">Publication-Grade PDF Study Reports</h3>
+            <p class="capability-desc">
+              Export comprehensive multi-page PDF study reports with georeferenced AOI snapshots, high-DPI distribution charts, deterministic health score breakdowns, and native flora suitability tables.
+            </p>
+            <button class="btn-card-action" data-action="methodology">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Read Methodology &rarr;</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. "Powered By" Technology & Data Strip -->
+    <div id="sec-powered-by" class="powered-by-strip">
+      <div class="powered-by-inner">
+        <h3 class="powered-by-title">Powered by Open Science &amp; Planetary GIS Architecture</h3>
+        <div class="powered-by-grid">
+          <div class="tech-badge-card">
+            <i class="fa-solid fa-satellite" style="font-size: 28px; color: #10b981;"></i>
+            <span class="tech-name">Copernicus Sentinel-2</span>
+            <span class="tech-role">ESA 10m L2A BOA Multispectral Optical Imagery</span>
+          </div>
+          <div class="tech-badge-card">
+            <i class="fa-solid fa-earth-asia" style="font-size: 28px; color: #10b981;"></i>
+            <span class="tech-name">Google Earth Engine</span>
+            <span class="tech-role">Planetary-Scale Cloud Masking &amp; Zonal Reductions</span>
+          </div>
+          <div class="tech-badge-card">
+            <i class="fa-solid fa-bolt" style="font-size: 28px; color: #10b981;"></i>
+            <span class="tech-name">FastAPI Engine</span>
+            <span class="tech-role">Asynchronous High-Throughput Geospatial Backend</span>
+          </div>
+          <div class="tech-badge-card">
+            <i class="fa-solid fa-database" style="font-size: 28px; color: #10b981;"></i>
+            <span class="tech-name">Supabase PostGIS</span>
+            <span class="tech-role">Geodetic Spatial Indexing &amp; Persistent Historical Runs</span>
+          </div>
+          <div class="tech-badge-card">
+            <i class="fa-solid fa-map-location-dot" style="font-size: 28px; color: #10b981;"></i>
+            <span class="tech-name">MapLibre GL &amp; Turf</span>
+            <span class="tech-role">GPU-Accelerated Vector GIS &amp; Geodesic Measurement</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Closing Mission & Final CTA Banner -->
+    <section id="sec-mission" class="editorial-container">
+      <div class="mission-cta-banner">
+        <div class="mission-text-block">
+          <span class="mission-kicker">ACADEMIC &amp; OPEN-GIS INITIATIVE</span>
+          <h2 class="mission-title">BMSIT&amp;M Urban Sustainability Project</h2>
+          <p class="mission-desc">
+            Developed at BMS Institute of Technology &amp; Management (Bengaluru, India), Urban GreenWatch delivers transparent, satellite-verified environmental intelligence to accelerate urban canopy conservation, combat microclimate heating, and safeguard biodiversity.
+          </p>
+        </div>
+        <div class="mission-actions">
+          <button id="btn-banner-launch-map" class="btn-hero-primary" title="Launch Interactive Map Workspace">
+            <i class="fa-solid fa-earth-americas"></i>
+            <span>Start Mapping Now &rarr;</span>
+          </button>
+          <button id="btn-banner-methodology" class="btn-hero-secondary" title="Read Remote Sensing Methodology">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Explore Methodology</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ======================================================================
        2. Map View: Global Interactive Canvas + Left Panel + Controls
        ====================================================================== -->
-  <main id="map-view" class="view-container active">
+  <main id="map-view" class="view-container" style="display: none;">
     <!-- Full-Viewport Interactive Map Canvas -->
     <div id="map"></div>
 
@@ -267,6 +600,279 @@
         </div>
         <div id="history-table-container">
           <!-- Populated dynamically by dashboardView.js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================================
+       3.5. Dedicated Methodology View (Full Scientific Reference)
+       ====================================================================== -->
+  <section id="methodology-view" class="view-container" style="display: none;">
+    <div class="methodology-container">
+      <div class="methodology-header-row">
+        <div class="methodology-header-content">
+          <span class="section-kicker">SCIENTIFIC &amp; TECHNICAL SPECIFICATION</span>
+          <h1 class="section-heading-lg">Remote Sensing &amp; Analytical Methodology</h1>
+          <p class="section-subheading" style="margin-bottom: 0;">
+            A rigorous technical reference detailing Copernicus Sentinel-2 Level-2A surface reflectance ingestion, cloud masking algorithms, deterministic NDVI classification, and canopy health index formulation.
+          </p>
+        </div>
+        <button id="btn-methodology-back-map" class="btn-hero-primary" style="padding: 10px 20px; font-size: 13.5px;">
+          <i class="fa-solid fa-earth-americas"></i>
+          <span>Back to Map</span>
+        </button>
+      </div>
+
+      <!-- Card 1: Satellite Constellation & Ingestion -->
+      <div class="methodology-card">
+        <div class="methodology-card-header">
+          <div class="methodology-card-icon">
+            <i class="fa-solid fa-satellite"></i>
+          </div>
+          <h2 class="methodology-card-title">1. Satellite Telemetry, Spectral Bands &amp; Cloud Masking</h2>
+        </div>
+        <p class="methodology-prose">
+          Urban GreenWatch queries the <strong>European Space Agency (ESA) Copernicus Sentinel-2</strong> twin-satellite constellation (Sentinel-2A and Sentinel-2B), providing an orbital revisit period of 5 days at the equator and 2–3 days at mid-latitudes. The system ingests calibrated <strong>Level-2A Bottom-Of-Atmosphere (BOA) surface reflectance</strong>, correcting for atmospheric aerosol scattering and water vapor absorption.
+        </p>
+        
+        <div class="methodology-table-wrapper">
+          <table class="methodology-table">
+            <thead>
+              <tr>
+                <th>Sentinel-2 Band</th>
+                <th>Central Wavelength</th>
+                <th>Spatial Resolution</th>
+                <th>Primary Remote Sensing Function</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Band 4 (Red)</strong></td>
+                <td>665 nm</td>
+                <td>10 meters</td>
+                <td>Strong chlorophyll absorption by healthy green vegetation foliage.</td>
+              </tr>
+              <tr>
+                <td><strong>Band 8 (NIR)</strong></td>
+                <td>842 nm</td>
+                <td>10 meters</td>
+                <td>High cellular reflectance by spongy mesophyll leaf structure.</td>
+              </tr>
+              <tr>
+                <td><strong>QA60 Bitmask</strong></td>
+                <td>Multi-band Flag</td>
+                <td>60 meters</td>
+                <td>Opaque cloud and cirrus detection flag for pixel-level exclusion.</td>
+              </tr>
+              <tr>
+                <td><strong>SCL (Scene Class)</strong></td>
+                <td>Multi-band Discrete</td>
+                <td>20 meters</td>
+                <td>Identifies cloud shadows, defective pixels, water bodies, and snow.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="methodology-prose">
+          <strong>Pixel-Level Cloud Filtering:</strong> Imagery undergoes automated cloud masking via the Sentinel-2 <code>QA60</code> bitmask (bit 10 for opaque clouds, bit 11 for cirrus) and Scene Classification Layer (<code>SCL</code>). Pixels flagged as high cloud probability or cloud shadows are omitted during spatial aggregation to eliminate radiometric distortion.
+        </p>
+      </div>
+
+      <!-- Card 2: Deterministic NDVI & 4-Tier Classification -->
+      <div class="methodology-card">
+        <div class="methodology-card-header">
+          <div class="methodology-card-icon">
+            <i class="fa-solid fa-calculator"></i>
+          </div>
+          <h2 class="methodology-card-title">2. Deterministic NDVI &amp; 4-Tier Canopy Classification</h2>
+        </div>
+        <p class="methodology-prose">
+          The <strong>Normalized Difference Vegetation Index (NDVI)</strong> mathematically contrasts chlorophyll absorption in the visible Red spectrum with strong reflectance in the Near-Infrared spectrum:
+        </p>
+        
+        <div class="formula-display-box">
+          <span class="formula-math-text">NDVI = (Band 8 NIR - Band 4 Red) / (Band 8 NIR + Band 4 Red)</span>
+          <span class="formula-math-caption">Where Band 8 (NIR) = 842 nm, Band 4 (Red) = 665 nm, yielding values strictly bounded between -1.0 and +1.0.</span>
+        </div>
+
+        <p class="methodology-prose">
+          To translate continuous radiometric values into actionable municipal planning categories, pixels within the AOI boundary are segmented into 4 standardized density bins:
+        </p>
+
+        <div class="methodology-table-wrapper">
+          <table class="methodology-table">
+            <thead>
+              <tr>
+                <th>Canopy Classification Tier</th>
+                <th>NDVI Threshold</th>
+                <th>Ground Characteristic</th>
+                <th>Urban Ecological Function</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="tier-indicator">
+                    <span class="tier-dot dot-dense"></span>
+                    <span>Dense Tree Canopy</span>
+                  </span>
+                </td>
+                <td><code>&ge; 0.60</code></td>
+                <td>Contiguous mature tree crowns, urban forests, dense parks</td>
+                <td>Primary urban cooling, maximum stormwater interception, carbon sequestration</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="tier-indicator">
+                    <span class="tier-dot dot-moderate"></span>
+                    <span>Moderate Canopy / Shrubs</span>
+                  </span>
+                </td>
+                <td><code>0.40 – 0.59</code></td>
+                <td>Light tree canopy, hedgerows, domestic gardens, young plantings</td>
+                <td>Secondary shade, air particulate filtration, localized microclimate buffering</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="tier-indicator">
+                    <span class="tier-dot dot-sparse"></span>
+                    <span>Sparse / Open Ground</span>
+                  </span>
+                </td>
+                <td><code>0.20 – 0.39</code></td>
+                <td>Grass verges, athletic turf, open vacant ground, agricultural fields</td>
+                <td>Soil permeability, low thermal mitigation, prime infill planting opportunities</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="tier-indicator">
+                    <span class="tier-dot dot-deficit"></span>
+                    <span>Built-up / Deficit</span>
+                  </span>
+                </td>
+                <td><code>&lt; 0.20</code></td>
+                <td>Impervious roads, rooftops, paved concrete, bare compacted soil</td>
+                <td>Heat island amplification, zero canopy benefit, priority deficit intervention zones</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="methodology-prose">
+          <strong>Green Cover Benchmark:</strong> Total vegetative cover is defined as the combined surface area of Dense and Moderate tiers (<code>NDVI &ge; 0.30</code> or <code>&ge; 0.40</code> depending on municipal criteria). Areas falling below the <strong>WHO 30% urban canopy benchmark</strong> are classified as Green Deficit zones, triggering planting calculations of ~400 native shade trees per hectare of deficit.
+        </p>
+      </div>
+
+      <!-- Card 3: Canopy Health Score & Change Math -->
+      <div class="methodology-card">
+        <div class="methodology-card-header">
+          <div class="methodology-card-icon">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <h2 class="methodology-card-title">3. Deterministic Canopy Health Score &amp; Temporal Change Math</h2>
+        </div>
+        <p class="methodology-prose">
+          To provide a unified, transparent metric of urban forest vitality, Urban GreenWatch computes a deterministic <strong>Canopy Health Score (0–100)</strong> balancing photosynthetic vigor with spatial footprint extent:
+        </p>
+
+        <div class="formula-display-box">
+          <span class="formula-math-text">Health Score = clamp(5, 100, round((Mean NDVI &times; 60) + (Green Cover % &times; 0.4)))</span>
+          <span class="formula-math-caption">Vigor Weight = 60% (mean photosynthetic vitality across AOI) • Spatial Extent Weight = 40% (percentage of AOI with NDVI &ge; 0.30).</span>
+        </div>
+
+        <p class="methodology-prose">
+          <strong>Score Interpretation Bands:</strong>
+        </p>
+        <div class="methodology-table-wrapper">
+          <table class="methodology-table">
+            <thead>
+              <tr>
+                <th>Score Range</th>
+                <th>Classification</th>
+                <th>Ecological Condition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>&lt; 45 / 100</strong></td>
+                <td>Critical Deficit</td>
+                <td>High impervious surface, extreme heat vulnerability, urgent afforestation required.</td>
+              </tr>
+              <tr>
+                <td><strong>45 – 64 / 100</strong></td>
+                <td>Moderate Vigor</td>
+                <td>Patchy canopy, lawn-dominated or young saplings; requires canopy density infill.</td>
+              </tr>
+              <tr>
+                <td><strong>65 – 79 / 100</strong></td>
+                <td>Good Canopy</td>
+                <td>Substantial mature tree cover meeting baseline urban resilience criteria.</td>
+              </tr>
+              <tr>
+                <td><strong>80 – 100 / 100</strong></td>
+                <td>Optimal Canopy</td>
+                <td>Contiguous, multi-tiered mature urban forest providing maximum ecosystem services.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="methodology-prose">
+          <strong>Multi-Date Temporal Comparison:</strong> When analyzing two Sentinel-2 acquisitions (T1 baseline and T2 current), change is computed on identical AOI geometry:
+        </p>
+        <div class="formula-display-box">
+          <span class="formula-math-text">&Delta;NDVI = Mean NDVI(T2) - Mean NDVI(T1)</span>
+          <span class="formula-math-text">&Delta;Green Cover % = Green Cover %(T2) - Green Cover %(T1)</span>
+          <span class="formula-math-caption">Positive values represent vegetation gain or seasonal greening; negative values indicate tree clearance or leaf senescence.</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Limitations & Remote Sensing Scope -->
+      <div class="methodology-card limitations-alert-card">
+        <div class="methodology-card-header">
+          <div class="methodology-card-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <h2 class="methodology-card-title" style="color: #fb7185;">4. Remote Sensing Scope &amp; Honest Scientific Limitations</h2>
+        </div>
+        <p class="methodology-prose">
+          Transparency and scientific integrity are paramount. Users should evaluate Urban GreenWatch telemetry within the following verified bounds of satellite remote sensing:
+        </p>
+        
+        <div class="limitations-list">
+          <div class="limitation-item">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>
+              <strong>10m Mixed-Pixel Footprints (No Individual Tree Stems):</strong>
+              Each Sentinel-2 pixel integrates electromagnetic radiance over a 10m &times; 10m (100 m&sup2;) ground area. The system measures <em>aggregate vegetative canopy cover and vigor</em>; it does not count individual tree stems, measure trunk diameters (DBH), or resolve isolated street saplings smaller than the pixel dimension.
+            </div>
+          </div>
+
+          <div class="limitation-item">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>
+              <strong>No Optical Species Identification from Satellite:</strong>
+              10-meter broadband optical sensors cannot classify tree species. All recommended flora provided by Urban GreenWatch are derived from deterministic horticultural rules based on geographic location, elevation, climate zone, and empirical NDVI density—not optical spectral classification.
+            </div>
+          </div>
+
+          <div class="limitation-item">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>
+              <strong>Phenology &amp; Seasonal Variation:</strong>
+              NDVI values naturally fluctuate across seasons due to precipitation cycles, deciduous leaf shed, and agricultural harvesting. For rigorous multi-date change detection, always compare imagery acquired during similar seasons or phenological windows.
+            </div>
+          </div>
+
+          <div class="limitation-item">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>
+              <strong>Understory and Lawn Contribution:</strong>
+              Well-watered golf courses, agricultural plots, or dense ground lawns can exhibit high NDVI values. The Canopy Health Score incorporates both mean NDVI and green cover thresholds to mitigate lawn bias, but field ground-truthing remains essential for municipal planning.
+            </div>
+          </div>
         </div>
       </div>
     </div>
