@@ -52,6 +52,28 @@ def initialize_earth_engine() -> Tuple[bool, Optional[str]]:
     try:
         import ee
 
+        # 1. Primary Production Auth: Service Account JSON string in environment variable (Render / Cloud)
+        if getattr(settings, "GEE_SERVICE_ACCOUNT_JSON", None):
+            raw_key_json = settings.GEE_SERVICE_ACCOUNT_JSON.strip()
+            if raw_key_json:
+                try:
+                    import json
+                    if raw_key_json.startswith("{"):
+                        key_dict = json.loads(raw_key_json)
+                        if isinstance(key_dict, dict) and "project_id" in key_dict and not settings.GEE_PROJECT_ID:
+                            project_id = key_dict["project_id"]
+                            _gee_project_id = project_id
+
+                    credentials = ee.ServiceAccountCredentials(key_data=raw_key_json)
+                    ee.Initialize(credentials, project=project_id)
+                    logger.info("Google Earth Engine initialized successfully with in-memory Service Account JSON (Project: %s)", project_id)
+                    _gee_initialized = True
+                    _gee_init_error = None
+                    return True, None
+                except Exception as json_err:
+                    logger.warning("Failed GEE init with GEE_SERVICE_ACCOUNT_JSON: %s. Falling back to key file / ambient credentials.", json_err)
+
+        # 2. Local Development Auth: Service Account email + JSON key file on disk
         if settings.GEE_SERVICE_ACCOUNT and key_path.exists():
             credentials = ee.ServiceAccountCredentials(
                 settings.GEE_SERVICE_ACCOUNT,
@@ -64,7 +86,7 @@ def initialize_earth_engine() -> Tuple[bool, Optional[str]]:
             _gee_init_error = None
             return True, None
         else:
-            # Attempt default initialization if ambient Google credentials exist
+            # 3. Ambient Credentials Auth (gcloud auth application-default)
             ee.Initialize(project=project_id)
             logger.info("Google Earth Engine initialized with ambient credentials (Project: %s).", project_id)
             _gee_initialized = True

@@ -33,9 +33,13 @@ class Settings(BaseSettings):
 
     # Google Earth Engine (GEE) Service Account Credentials
     GEE_SERVICE_ACCOUNT: Optional[str] = None
+    GEE_SERVICE_ACCOUNT_JSON: Optional[str] = None  # In-memory service account JSON string for production (Render/Cloud)
     GEE_PRIVATE_KEY_FILE: Optional[str] = "gee-private-key.json"
     GEE_PRIVATE_KEY_PATH: Optional[str] = None
     GEE_PROJECT_ID: Optional[str] = "urban-tree-mapping"
+
+    # CORS Configuration (comma-separated origins or "*")
+    ALLOWED_ORIGINS: str = "*"
 
     # Google Gemini AI Configuration
     GEMINI_API_KEY: Optional[str] = None

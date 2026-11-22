@@ -5,9 +5,9 @@
  * and service health monitoring.
  */
 
-const API_BASE_URL = typeof window !== "undefined" && (window.location?.hostname === "localhost" || window.location?.hostname === "127.0.0.1")
-  ? "http://localhost:8000/api"
-  : "/api";
+import { API_BASE_URL, getApiEndpoint } from "../config.js";
+
+export { API_BASE_URL, getApiEndpoint };
 
 /**
  * Checks system health and backend connectivity.
@@ -15,7 +15,7 @@ const API_BASE_URL = typeof window !== "undefined" && (window.location?.hostname
  */
 export async function checkSystemHealth() {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await fetch(getApiEndpoint("/health"));
     if (!response.ok) {
       throw new Error(`Health check returned status: ${response.status}`);
     }
@@ -46,7 +46,7 @@ export async function submitAnalyzeRequest(geoJsonPolygon, options = {}) {
     end_date: options.end_date || null
   };
 
-  const response = await fetch(`${API_BASE_URL}/analyze`, {
+  const response = await fetch(getApiEndpoint("/analyze"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -77,7 +77,7 @@ export async function submitCompareRequest(geoJsonPolygon, historicalDate, optio
     name: options.name || `Temporal Comparison ${historicalDate}`
   };
 
-  const response = await fetch(`${API_BASE_URL}/analyze/compare`, {
+  const response = await fetch(getApiEndpoint("/analyze/compare"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -99,7 +99,7 @@ export async function submitCompareRequest(geoJsonPolygon, historicalDate, optio
  * @returns {Promise<Array<Object>>}
  */
 export async function fetchSavedAnalyses(limit = 50) {
-  const response = await fetch(`${API_BASE_URL}/analyses?limit=${limit}`);
+  const response = await fetch(getApiEndpoint(`/analyses?limit=${limit}`));
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `Failed to fetch saved analyses: HTTP ${response.status}`);
@@ -113,7 +113,7 @@ export async function fetchSavedAnalyses(limit = 50) {
  * @returns {Promise<Object>}
  */
 export async function fetchAnalysisById(id) {
-  const response = await fetch(`${API_BASE_URL}/analyses/${id}`);
+  const response = await fetch(getApiEndpoint(`/analyses/${id}`));
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `Failed to fetch analysis ${id}: HTTP ${response.status}`);
@@ -127,7 +127,7 @@ export async function fetchAnalysisById(id) {
  * @returns {Promise<{status: string, id: string}>}
  */
 export async function deleteAnalysisById(id) {
-  const response = await fetch(`${API_BASE_URL}/analyses/${id}`, {
+  const response = await fetch(getApiEndpoint(`/analyses/${id}`), {
     method: "DELETE"
   });
   if (!response.ok) {
@@ -144,7 +144,7 @@ export async function deleteAnalysisById(id) {
  * @returns {Promise<{total: number, items: Array}>}
  */
 export async function fetchAnalysisHistory(limit = 50, offset = 0) {
-  const response = await fetch(`${API_BASE_URL}/history?limit=${limit}&offset=${offset}`);
+  const response = await fetch(getApiEndpoint(`/history?limit=${limit}&offset=${offset}`));
   if (!response.ok) {
     throw new Error(`Failed to fetch history: ${response.statusText}`);
   }
@@ -157,7 +157,7 @@ export async function fetchAnalysisHistory(limit = 50, offset = 0) {
  * @returns {Promise<Object>}
  */
 export async function fetchHistoryDetail(id) {
-  const response = await fetch(`${API_BASE_URL}/history/${id}`);
+  const response = await fetch(getApiEndpoint(`/history/${id}`));
   if (!response.ok) {
     throw new Error(`Failed to fetch run ${id}: ${response.statusText}`);
   }
@@ -170,7 +170,7 @@ export async function fetchHistoryDetail(id) {
  * @returns {Promise<Object>} InsightsResponse payload
  */
 export async function generateAiInsights(metrics) {
-  const response = await fetch(`${API_BASE_URL}/insights`, {
+  const response = await fetch(getApiEndpoint("/insights"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
