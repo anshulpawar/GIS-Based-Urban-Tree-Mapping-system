@@ -281,12 +281,281 @@
         </div>
 
         <div class="split-showcase-visual">
-          <img
-            src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1200&q=80"
-            alt="Aerial view of urban canopy corridors and green city infrastructure"
-            class="split-showcase-img"
-            loading="lazy"
-          />
+          <!-- High-Detail Custom Vector Illustration: Sentinel-2 Multispectral Scan & 10m NDVI Grid -->
+          <svg
+            class="split-showcase-svg"
+            viewBox="0 0 600 520"
+            preserveAspectRatio="xMidYMid slice"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label="Copernicus Sentinel-2 10m Multispectral Urban Canopy Scan Illustration"
+          >
+            <defs>
+              <!-- Deep Dark Space/Canopy Radial Background -->
+              <radialGradient id="space-grad" cx="75%" cy="20%" r="90%">
+                <stop offset="0%" stop-color="#064e3b" stop-opacity="0.6" />
+                <stop offset="45%" stop-color="#0a1628" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#060913" />
+              </radialGradient>
+
+              <!-- Sentinel-2 Scan Beam Gradient -->
+              <linearGradient id="scan-beam-grad" x1="0.8" y1="0.15" x2="0.45" y2="0.65">
+                <stop offset="0%" stop-color="#10b981" stop-opacity="0.45" />
+                <stop offset="60%" stop-color="#10b981" stop-opacity="0.12" />
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0.02" />
+              </linearGradient>
+
+              <!-- Solar Array Blue Gradient -->
+              <linearGradient id="solar-panel-grad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="50%" stop-color="#0284c7" />
+                <stop offset="100%" stop-color="#0369a1" />
+              </linearGradient>
+
+              <!-- Gold Foil Gradient -->
+              <linearGradient id="foil-gold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#fef08a" />
+                <stop offset="50%" stop-color="#eab308" />
+                <stop offset="100%" stop-color="#a16207" />
+              </linearGradient>
+
+              <!-- Neon Glow Filter -->
+              <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <!-- Base Canvas Background -->
+            <rect width="600" height="520" fill="url(#space-grad)" />
+
+            <!-- Cartographic Coordinate Grid Lines -->
+            <g stroke="#1e293b" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.65">
+              <line x1="60" y1="0" x2="60" y2="520" />
+              <line x1="160" y1="0" x2="160" y2="520" />
+              <line x1="260" y1="0" x2="260" y2="520" />
+              <line x1="360" y1="0" x2="360" y2="520" />
+              <line x1="460" y1="0" x2="460" y2="520" />
+              <line x1="560" y1="0" x2="560" y2="520" />
+              <line x1="0" y1="80" x2="600" y2="80" />
+              <line x1="0" y1="180" x2="600" y2="180" />
+              <line x1="0" y1="280" x2="600" y2="280" />
+              <line x1="0" y1="380" x2="600" y2="380" />
+              <line x1="0" y1="480" x2="600" y2="480" />
+            </g>
+
+            <!-- Coordinate Text Labels -->
+            <g font-family="monospace" font-size="9" fill="#475569" font-weight="600">
+              <text x="70" y="22">77°34'30"E</text>
+              <text x="270" y="22">77°35'45"E</text>
+              <text x="470" y="22">77°37'00"E</text>
+              <text x="14" y="185">12°58'40"N</text>
+              <text x="14" y="285">12°57'20"N</text>
+              <text x="14" y="385">12°56'00"N</text>
+            </g>
+
+            <!-- Stylized Urban Base Roads & Water Body -->
+            <g opacity="0.7">
+              <!-- Water Reservoir / Lake -->
+              <path
+                d="M 50,330 C 80,310 120,325 150,350 C 180,375 160,420 120,440 C 80,455 30,420 40,370 Z"
+                fill="#0369a1"
+                fill-opacity="0.35"
+                stroke="#0284c7"
+                stroke-width="1.2"
+              />
+              <text x="75" y="380" font-family="sans-serif" font-size="8.5" fill="#38bdf8" opacity="0.8">Urban Water Body</text>
+
+              <!-- Secondary River / Canal Vector -->
+              <path
+                d="M 0,220 Q 80,240 140,290 T 260,340"
+                fill="none"
+                stroke="#0284c7"
+                stroke-width="1.8"
+                stroke-opacity="0.4"
+                stroke-dasharray="4,2"
+              />
+
+              <!-- Transit Arteries / City Roads -->
+              <path d="M 0,140 Q 220,170 380,120 T 600,100" fill="none" stroke="#334155" stroke-width="2.5" />
+              <path d="M 280,0 Q 300,200 290,520" fill="none" stroke="#334155" stroke-width="2.5" />
+              <path d="M 120,520 L 460,0" fill="none" stroke="#1e293b" stroke-width="1.5" />
+            </g>
+
+            <!-- 10m Multispectral Pixel Grid (Simulating Real NDVI Zonal Classification) -->
+            <g id="ndvi-pixel-cluster" transform="translate(130, 160)">
+              <!-- Row 0 -->
+              <rect x="0" y="0" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="25" y="0" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="50" y="0" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="75" y="0" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="100" y="0" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="125" y="0" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="150" y="0" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="175" y="0" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.85" />
+              <rect x="200" y="0" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+
+              <!-- Row 1 -->
+              <rect x="0" y="25" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="25" y="25" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="50" y="25" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="75" y="25" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="100" y="25" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="125" y="25" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="150" y="25" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="175" y="25" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="200" y="25" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+
+              <!-- Row 2 -->
+              <rect x="0" y="50" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="25" y="50" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="50" y="50" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="75" y="50" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="100" y="50" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="125" y="50" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="150" y="50" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="175" y="50" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="200" y="50" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+
+              <!-- Row 3 -->
+              <rect x="0" y="75" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="25" y="75" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="50" y="75" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="75" y="75" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="100" y="75" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="125" y="75" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="150" y="75" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="175" y="75" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+              <rect x="200" y="75" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+
+              <!-- Row 4 -->
+              <rect x="0" y="100" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="25" y="100" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="50" y="100" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="75" y="100" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="100" y="100" width="22" height="22" rx="2" fill="#047857" opacity="0.95" />
+              <rect x="125" y="100" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="150" y="100" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="175" y="100" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="200" y="100" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.95" />
+
+              <!-- Row 5 -->
+              <rect x="0" y="125" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="25" y="125" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="50" y="125" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="75" y="125" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="100" y="125" width="22" height="22" rx="2" fill="#047857" opacity="0.9" />
+              <rect x="125" y="125" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="150" y="125" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="175" y="125" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+              <rect x="200" y="125" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.95" />
+
+              <!-- Row 6 -->
+              <rect x="0" y="150" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+              <rect x="25" y="150" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="50" y="150" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="75" y="150" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="100" y="150" width="22" height="22" rx="2" fill="#10b981" opacity="0.9" />
+              <rect x="125" y="150" width="22" height="22" rx="2" fill="#eab308" opacity="0.85" />
+              <rect x="150" y="150" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.9" />
+              <rect x="175" y="150" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.95" />
+              <rect x="200" y="150" width="22" height="22" rx="2" fill="#f43f5e" opacity="0.95" />
+            </g>
+
+            <!-- Geodesic AOI Boundary Polygon -->
+            <polygon
+              points="110,145 350,135 375,345 220,355 95,300"
+              fill="rgba(16, 185, 129, 0.08)"
+              stroke="#10b981"
+              stroke-width="2.5"
+              stroke-dasharray="6,4"
+              filter="url(#neon-glow)"
+            />
+
+            <!-- AOI Boundary Vertices -->
+            <g fill="#10b981" stroke="#ffffff" stroke-width="1.8">
+              <circle cx="110" cy="145" r="4.5" />
+              <circle cx="350" cy="135" r="4.5" />
+              <circle cx="375" cy="345" r="4.5" />
+              <circle cx="220" cy="355" r="4.5" />
+              <circle cx="95" cy="300" r="4.5" />
+            </g>
+
+            <!-- AOI Telemetry Pill Badge (Embedded in SVG) -->
+            <g transform="translate(120, 120)">
+              <rect x="0" y="0" width="168" height="22" rx="4" fill="#0f172a" fill-opacity="0.9" stroke="#10b981" stroke-width="1" />
+              <circle cx="12" cy="11" r="3.5" fill="#10b981" />
+              <text x="22" y="15" font-family="sans-serif" font-size="9.5" fill="#f8fafc" font-weight="700">AOI: 42.8 ha • Geodesic Valid</text>
+            </g>
+
+            <!-- Conical Satellite Multispectral Scan Beam -->
+            <polygon points="490,65 110,145 375,345" fill="url(#scan-beam-grad)" opacity="0.75" />
+            <line x1="490" y1="65" x2="110" y2="145" stroke="#10b981" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.8" />
+            <line x1="490" y1="65" x2="350" y2="135" stroke="#10b981" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.8" />
+            <line x1="490" y1="65" x2="375" y2="345" stroke="#10b981" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.8" />
+
+            <!-- Copernicus Sentinel-2 Satellite Graphic (Top Right) -->
+            <g id="sentinel2-satellite" transform="translate(490, 65) rotate(-22)">
+              <!-- Central Bus / Satellite Body -->
+              <rect x="-14" y="-14" width="28" height="28" rx="3" fill="url(#foil-gold)" stroke="#78350f" stroke-width="1" />
+
+              <!-- Left Solar Array Wing -->
+              <g transform="translate(-72, -9)">
+                <rect x="0" y="0" width="54" height="18" rx="2" fill="url(#solar-panel-grad)" stroke="#0284c7" stroke-width="0.8" />
+                <line x1="18" y1="0" x2="18" y2="18" stroke="#38bdf8" stroke-width="0.6" opacity="0.7" />
+                <line x1="36" y1="0" x2="36" y2="18" stroke="#38bdf8" stroke-width="0.6" opacity="0.7" />
+                <line x1="0" y1="9" x2="54" y2="9" stroke="#38bdf8" stroke-width="0.6" opacity="0.7" />
+                <!-- Connector Boom -->
+                <line x1="54" y1="9" x2="58" y2="9" stroke="#94a3b8" stroke-width="2" />
+              </g>
+
+              <!-- Right Solar Array Wing -->
+              <g transform="translate(18, -9)">
+                <rect x="0" y="0" width="54" height="18" rx="2" fill="url(#solar-panel-grad)" stroke="#0284c7" stroke-width="0.8" />
+                <line x1="18" y1="0" x2="18" y2="18" stroke="#38bdf8" stroke-width="0.6" opacity="0.7" />
+                <line x1="36" y1="0" x2="36" y2="18" stroke="#38bdf8" stroke-width="0.6" opacity="0.7" />
+                <line x1="0" y1="9" x2="54" y2="9" stroke="#38bdf8" stroke-width="0.6" opacity="0.7" />
+                <!-- Connector Boom -->
+                <line x1="-4" y1="9" x2="0" y2="9" stroke="#94a3b8" stroke-width="2" />
+              </g>
+
+              <!-- Optical Sensor Instrument Pod (MSI Aperture) -->
+              <circle cx="0" cy="14" r="5" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2" />
+              <circle cx="0" cy="14" r="2.5" fill="#10b981" />
+            </g>
+
+            <!-- Satellite Telemetry Badge -->
+            <g transform="translate(390, 28)">
+              <rect x="0" y="0" width="188" height="22" rx="4" fill="#0f172a" fill-opacity="0.85" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+              <text x="10" y="14" font-family="monospace" font-size="9" fill="#38bdf8" font-weight="700">COPERNICUS S2B • MSI L2A</text>
+            </g>
+
+            <!-- North Arrow Compass (Top Left) -->
+            <g transform="translate(36, 46)">
+              <circle cx="0" cy="0" r="14" fill="#0f172a" fill-opacity="0.8" stroke="#334155" stroke-width="1" />
+              <polygon points="0,-10 4,2 0,0 -4,2" fill="#10b981" />
+              <polygon points="0,10 4,0 0,0 -4,0" fill="#475569" />
+              <text x="-3.5" y="-12" font-family="sans-serif" font-size="8" fill="#10b981" font-weight="800">N</text>
+            </g>
+
+            <!-- Live Spectral Waveband Legend (Bottom Left) -->
+            <g transform="translate(24, 460)">
+              <rect x="0" y="0" width="260" height="36" rx="6" fill="#0a0f1d" fill-opacity="0.9" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+              <text x="12" y="15" font-family="sans-serif" font-size="8.5" fill="#94a3b8" font-weight="600">NDVI = (B8 NIR - B4 RED) / (B8 + B4)</text>
+              <g transform="translate(12, 22)">
+                <rect x="0" y="0" width="45" height="7" fill="#f43f5e" rx="1" />
+                <rect x="47" y="0" width="45" height="7" fill="#eab308" rx="1" />
+                <rect x="94" y="0" width="45" height="7" fill="#10b981" rx="1" />
+                <rect x="141" y="0" width="45" height="7" fill="#047857" rx="1" />
+                <text x="195" y="7" font-family="sans-serif" font-size="7.5" fill="#cbd5e1">10m / Pixel</text>
+              </g>
+            </g>
+          </svg>
+
+          <!-- Floating Metric Badges Overlay -->
           <div class="showcase-floating-overlay">
             <div class="floating-metric-pills">
               <div class="glass-metric-pill">
@@ -323,6 +592,7 @@
               alt="Urban forestry and street tree canopy mapping"
               class="capability-img"
               loading="lazy"
+              onerror="this.style.display='none'"
             />
             <span class="capability-badge-tag">Municipal Forestry</span>
           </div>
@@ -345,6 +615,7 @@
               alt="Urban heat island microclimate and impervious built-up infrastructure"
               class="capability-img"
               loading="lazy"
+              onerror="this.style.display='none'"
             />
             <span class="capability-badge-tag">Microclimate Resilience</span>
           </div>
@@ -367,6 +638,7 @@
               alt="Satellite Earth observation data and research reporting"
               class="capability-img"
               loading="lazy"
+              onerror="this.style.display='none'"
             />
             <span class="capability-badge-tag">Academic Research</span>
           </div>
