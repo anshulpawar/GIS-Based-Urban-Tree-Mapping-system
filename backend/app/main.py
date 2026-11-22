@@ -24,11 +24,18 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Enable CORS middleware (allow all origins, headers, and methods)
+# Parse allowed origins from settings
+raw_origins = getattr(settings, "ALLOWED_ORIGINS", "*") or "*"
+if raw_origins.strip() == "*":
+    cors_origins = ["*"]
+else:
+    cors_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+
+# Enable CORS middleware (supporting Render production & local development)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=True if "*" not in cors_origins else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,7 +47,16 @@ async def startup_event():
     initialize_earth_engine()
 
 
-# Health check route
+# Lightweight health check route for cloud platform probes (e.g. Render / Kubernetes)
+@app.get("/health", tags=["Health"])
+async def root_health_check():
+    """
+    Lightweight health check endpoint returning 200 OK for platform monitors.
+    """
+    return {"status": "ok"}
+
+
+# Detailed health check route with GEE telemetry status
 @app.get("/api/health", tags=["Health"])
 async def health_check():
     """
