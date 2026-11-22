@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4"
   },
@@ -25,4 +27,3 @@
   "author": "Urban Tree Mapping Team",
   "license": "MIT"
 }
-

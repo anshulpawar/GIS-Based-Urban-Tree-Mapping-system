@@ -32,6 +32,10 @@
   <!-- Turf.js for Live Geodesic Area, Perimeter & Geometry Validation -->
   <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 
+  <!-- jsPDF & AutoTable for Researcher PDF Study Report Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
   <!-- Application Styling -->
   <link rel="stylesheet" href="./styles/main.css" />
 </head>
@@ -421,6 +425,65 @@
             </div>
           </div>
 
+          <!-- Canopy Health Score Breakdown & Interpretation -->
+          <div id="ins-score-breakdown-card" class="insights-score-breakdown-card">
+            <div class="score-breakdown-header">
+              <div class="score-breakdown-title">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Canopy Health Score Breakdown & Formula Weighting</span>
+              </div>
+              <span id="ins-score-band-pill" class="score-band-pill band-moderate">Moderate Vigor</span>
+            </div>
+            <div class="score-formula-grid">
+              <div class="formula-component-col">
+                <div class="formula-col-header">
+                  <span class="formula-label">Vegetative Vigor & Density (NDVI)</span>
+                  <strong id="ins-ndvi-pts" class="formula-pts">33.0 / 60 pts</strong>
+                </div>
+                <div class="formula-progress-track">
+                  <div id="ins-ndvi-bar" class="formula-progress-fill ndvi-fill" style="width: 55%;"></div>
+                </div>
+                <span id="ins-ndvi-calc-sub" class="formula-subtext">Mean NDVI (0.550) × 60 weight</span>
+              </div>
+              <div class="formula-component-col">
+                <div class="formula-col-header">
+                  <span class="formula-label">Spatial Canopy Footprint (Coverage %)</span>
+                  <strong id="ins-cover-pts" class="formula-pts">26.0 / 40 pts</strong>
+                </div>
+                <div class="formula-progress-track">
+                  <div id="ins-cover-bar" class="formula-progress-fill cover-fill" style="width: 65%;"></div>
+                </div>
+                <span id="ins-cover-calc-sub" class="formula-subtext">Green Cover (65.0%) × 0.4 weight</span>
+              </div>
+            </div>
+            <div class="score-insight-note">
+              <i class="fa-solid fa-circle-question"></i>
+              <p id="ins-score-explanation">
+                <strong>Why this score?</strong> Photosynthetic vitality & crown density carry 60% of the score weight, while spatial footprint coverage carries 40%. An area with extensive green footprint (e.g. 65% green cover) can yield a moderate score (50–60) if dominated by open lawns, young saplings, or seasonal shrubs rather than contiguous, mature high-NDVI shade tree canopies.
+              </p>
+            </div>
+            <div class="score-bands-legend">
+              <div class="band-item"><span class="band-dot dot-critical"></span><strong>&lt;45:</strong> Critical Deficit</div>
+              <div class="band-item"><span class="band-dot dot-moderate"></span><strong>45–64:</strong> Moderate Vigor</div>
+              <div class="band-item"><span class="band-dot dot-good"></span><strong>65–79:</strong> Good Canopy</div>
+              <div class="band-item"><span class="band-dot dot-optimal"></span><strong>80–100:</strong> Optimal Canopy</div>
+            </div>
+          </div>
+
+          <!-- How to Improve This Score -->
+          <div id="ins-improvement-card" class="insights-improvement-card">
+            <div class="improvement-header">
+              <div class="improvement-title">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                <span>How to Improve This Score</span>
+              </div>
+              <span id="ins-projected-uplift-badge" class="projected-uplift-badge">+15 pts Projected Uplift</span>
+            </div>
+            <div id="ins-improvement-steps" class="improvement-steps-grid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
           <!-- Actionable Recommendations Grid -->
           <div class="insights-section-block">
             <div class="insights-section-header">
@@ -467,9 +530,9 @@
             <i class="fa-solid fa-arrows-rotate"></i>
             <span>Regenerate</span>
           </button>
-          <button id="btn-copy-insights" class="btn-subtle" title="Copy full report to clipboard">
-            <i class="fa-solid fa-copy"></i>
-            <span>Copy Report</span>
+          <button id="btn-download-insights" class="btn-subtle btn-download-insights" title="Download comprehensive PDF study report">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>Download Report (PDF)</span>
           </button>
         </div>
         <button id="btn-dismiss-insights" class="btn-primary-action compact">Done</button>

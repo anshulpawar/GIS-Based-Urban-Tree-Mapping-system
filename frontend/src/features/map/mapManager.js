@@ -43,7 +43,8 @@ export class MapManager {
       zoom: this.defaultZoom,
       minZoom: 2,
       maxZoom: 18,
-      attributionControl: false
+      attributionControl: false,
+      preserveDrawingBuffer: true
     });
 
     this.map.on("load", () => {
@@ -518,5 +519,145 @@ export class MapManager {
    */
   getMapInstance() {
     return this.map;
+  }
+
+  /**
+   * Captures an image snapshot of the active map canvas, tightly zoomed and cropped
+   * around the active AOI polygon with a minimal 10-15% buffer.
+   * Restores the user's interactive camera view immediately upon capture.
+   * @param {Object} [geometry] - Optional GeoJSON Polygon geometry
+   * @returns {Promise<string|null>} Base64 PNG data URL or null on error
+   */
+  async getMapSnapshot(geometry = null) {
+    try {
+      if (!this.map) return null;
+      const canvas = this.map.getCanvas();
+      if (!canvas) return null;
+
+      // If no valid polygon coordinates provided, capture full viewport as fallback
+      if (!geometry || !geometry.coordinates || !Array.isArray(geometry.coordinates) || geometry.coordinates.length === 0) {
+        const dataUrl = canvas.toDataURL("image/png");
+        return (dataUrl && dataUrl.length > 200) ? dataUrl : null;
+      }
+
+      // 1. Extract coordinate bounds [minLng, minLat, maxLng, maxLat]
+      let minLng = Infinity;
+      let maxLng = -Infinity;
+      let minLat = Infinity;
+      let maxLat = -Infinity;
+      const allCoords = [];
+
+      const traverse = (coords) => {
+        if (typeof coords[0] === "number" && typeof coords[1] === "number") {
+          minLng = Math.min(minLng, coords[0]);
+          maxLng = Math.max(maxLng, coords[0]);
+          minLat = Math.min(minLat, coords[1]);
+          maxLat = Math.max(maxLat, coords[1]);
+          allCoords.push(coords);
+        } else if (Array.isArray(coords)) {
+          coords.forEach(traverse);
+        }
+      };
+      traverse(geometry.coordinates);
+
+      if (minLng === Infinity || maxLng === -Infinity || allCoords.length === 0) {
+        const dataUrl = canvas.toDataURL("image/png");
+        return (dataUrl && dataUrl.length > 200) ? dataUrl : null;
+      }
+
+      // 2. Save current camera state so user view is not disrupted
+      const prevCenter = this.map.getCenter();
+      const prevZoom = this.map.getZoom();
+      const prevBearing = this.map.getBearing();
+      const prevPitch = this.map.getPitch();
+
+      // 3. Calculate 12% geographic buffer around the bounding box
+      const dLng = Math.max(0.0005, (maxLng - minLng) * 0.12);
+      const dLat = Math.max(0.0005, (maxLat - minLat) * 0.12);
+      const bufferedBounds = [
+        [minLng - dLng, minLat - dLat],
+        [maxLng + dLng, maxLat + dLat]
+      ];
+
+      // 4. Fit camera tightly to polygon with animate: false
+      this.map.fitBounds(bufferedBounds, { padding: 25, maxZoom: 18, animate: false });
+
+      // 5. Wait for MapLibre to complete rendering the tight frame
+      await new Promise((resolve) => {
+        let resolved = false;
+        const done = () => {
+          if (!resolved) {
+            resolved = true;
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+          }
+        };
+
+        if (this.map.loaded() && this.map.areTilesLoaded()) {
+          done();
+        } else {
+          this.map.once("idle", done);
+          setTimeout(done, 750);
+        }
+      });
+
+      // 6. Project polygon vertices onto screen coordinates to crop tightly
+      const activeCanvas = this.map.getCanvas();
+      const clientW = activeCanvas.clientWidth || activeCanvas.width;
+      const pixelRatio = activeCanvas.width / clientW;
+
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+
+      allCoords.forEach((coord) => {
+        const pt = this.map.project(coord);
+        minX = Math.min(minX, pt.x);
+        maxX = Math.max(maxX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxY = Math.max(maxY, pt.y);
+      });
+
+      minX *= pixelRatio;
+      maxX *= pixelRatio;
+      minY *= pixelRatio;
+      maxY *= pixelRatio;
+
+      const polyW = maxX - minX;
+      const polyH = maxY - minY;
+
+      // 12% pixel buffer around the polygon
+      const bufX = Math.max(20 * pixelRatio, polyW * 0.12);
+      const bufY = Math.max(20 * pixelRatio, polyH * 0.12);
+
+      const cropX = Math.max(0, Math.floor(minX - bufX));
+      const cropY = Math.max(0, Math.floor(minY - bufY));
+      const cropW = Math.min(activeCanvas.width - cropX, Math.ceil(polyW + bufX * 2));
+      const cropH = Math.min(activeCanvas.height - cropY, Math.ceil(polyH + bufY * 2));
+
+      let tightDataUrl = null;
+      if (cropW > 50 && cropH > 50) {
+        const cropCanvas = document.createElement("canvas");
+        cropCanvas.width = cropW;
+        cropCanvas.height = cropH;
+        const ctx = cropCanvas.getContext("2d");
+        ctx.drawImage(activeCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+        tightDataUrl = cropCanvas.toDataURL("image/png");
+      }
+
+      // 7. Immediately restore original camera position
+      this.map.jumpTo({
+        center: prevCenter,
+        zoom: prevZoom,
+        bearing: prevBearing,
+        pitch: prevPitch
+      });
+
+      const finalUrl = tightDataUrl || activeCanvas.toDataURL("image/png");
+      return (finalUrl && finalUrl.length > 200) ? finalUrl : null;
+    } catch (err) {
+      console.warn("Unable to capture map canvas snapshot (CORS or WebGL context):", err);
+      return null;
+    }
   }
 }
