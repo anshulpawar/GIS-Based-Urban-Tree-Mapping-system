@@ -512,9 +512,9 @@ bench_optimal = evaluate_environmental_insights(
 )
 ndvi_pts_c = round(0.78 * 60.0, 1) # 46.8
 cover_pts_c = round(85.0 * 0.4, 1) # 34.0
-assert bench_optimal.health_score == 80
+assert bench_optimal.health_score == 81
 assert bench_optimal.health_score >= 80, "Expected Optimal band"
-print(f"Health Score Clarity Case C (Optimal: 80/100): NDVI={ndvi_pts_c}pts, Cover={cover_pts_c}pts -> Verified OK.")
+print(f"Health Score Clarity Case C (Optimal: 81/100): NDVI={ndvi_pts_c}pts, Cover={cover_pts_c}pts -> Verified OK.")
 
 # Clean up
 os.environ.pop('GEMINI_API_KEY', None)

@@ -197,7 +197,7 @@ def _build_canonical_planting_recommendations(req: InsightsRequest) -> List[Plan
             species_examples=[
                 "Justicia adhatoda (Malabar Nut / Vasaka)",
                 "Ixora coccinea (Jungle Geranium)",
-                "Nerium oleander"
+                "Carissa spinarum (Karanda / Wild Karavanda)"
             ],
             why_suited_for_area=(
                 f"Tolerates partial to heavy shade beneath existing canopy ({dense_pct:.1f}% dense cover); requires minimal irrigation "
@@ -271,7 +271,8 @@ STRICT SCIENTIFIC & NON-REPETITIVE GUIDELINES:
      * If the canopy is optimal: Focus on legal root-zone preservation, multi-tier understory diversification, and seasonal drought/pest surveillance.
    - Part 3: "## 3. Recommended Flora & Ecological Benefits"
      Synthesize which native and climate-adapted tree and plant species fit the polygon's spatial profile, why they thrive in the area's physical conditions, and their targeted environmental benefits (cooling, stormwater mitigation, particulate trapping).
-6. Provide exactly 3 to 4 tailored plant groups in "planting_recommendations" matched to the polygon's spatial profile, climate, and space constraints (open parks, narrow avenues, understory beneath dense canopy, and drainage/bioswales).
+6. Provide exactly 3 to 4 tailored plant groups in "planting_recommendations" matched to the polygon's spatial profile, climate, and space constraints (open parks, narrow avenues, understory beneath dense canopy, and drainage/bioswales). Ensure all recommended flora are strictly native or ecologically beneficial (NEVER suggest invasive weeds such as Lantana camara or Prosopis juliflora; use true natives like Azadirachta indica, Pongamia pinnata, Cassia fistula, Carissa spinarum, Dodonaea viscosa, or Justicia adhatoda).
+7. Use plain ASCII punctuation only. No non-breaking hyphens or spaces, no narrow spaces, no >= or <= symbols (write 'at least' / 'at most'), no arrows, no emoji.
 
 RESPONSE FORMAT REQUIREMENTS:
 You MUST respond with a single valid JSON object with EXACTLY the following structure (no surrounding markdown code blocks):
@@ -617,6 +618,15 @@ def _parse_insights_json(
                     specs = [s.strip() for s in specs.split(",") if s.strip()]
                 elif not isinstance(specs, list):
                     specs = []
+                # Sanitize against invasive species like Lantana camara
+                clean_specs = []
+                for s in specs:
+                    s_str = str(s).strip()
+                    if "lantana" in s_str.lower():
+                        s_str = "Carissa spinarum (Karanda / Wild Karavanda)"
+                    if s_str and s_str not in clean_specs:
+                        clean_specs.append(s_str)
+                specs = clean_specs
                 fallback_item = canonical_flora[min(idx, len(canonical_flora) - 1)]
                 clean_flora.append(
                     PlantingRecommendation(

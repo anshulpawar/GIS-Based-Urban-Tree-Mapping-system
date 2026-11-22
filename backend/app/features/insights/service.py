@@ -62,7 +62,7 @@ def evaluate_environmental_insights(
 
     # 2. Canopy Health and Score Computation
     # Normalized score: base 100 scaled on NDVI and green coverage
-    health_score = int(min(100.0, max(5.0, (mean_ndvi * 60.0) + (green_cover_pct * 0.4))))
+    health_score = int(round(min(100.0, max(5.0, (mean_ndvi * 60.0) + (green_cover_pct * 0.4)))))
 
     if green_cover_pct < 15.0 or mean_ndvi < 0.2:
         health_status = "Critical Green Deficit"
