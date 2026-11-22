@@ -501,29 +501,53 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ======================================================================
-  // 8. Primary Top Navbar Navigation (MAP | DASHBOARD | METHODOLOGY)
+  // 8. Primary Top Navbar Navigation (ABOUT | MAP | DASHBOARD | METHODOLOGY)
   // ======================================================================
+  const navBtnAbout = document.getElementById("nav-btn-about");
   const navBtnMap = document.getElementById("nav-btn-map");
   const navBtnDashboard = document.getElementById("nav-btn-dashboard");
   const navBtnMethodology = document.getElementById("nav-btn-methodology");
+  const aboutView = document.getElementById("about-view");
   const mapView = document.getElementById("map-view");
   const dashboardView = document.getElementById("dashboard-view");
+  const methodologyView = document.getElementById("methodology-view");
   const btnDashboardBackMap = document.getElementById("btn-dashboard-back-map");
+  const btnMethodologyBackMap = document.getElementById("btn-methodology-back-map");
 
   function switchPrimaryView(viewName) {
+    const views = [
+      { name: "about", btn: navBtnAbout, el: aboutView },
+      { name: "map", btn: navBtnMap, el: mapView },
+      { name: "dashboard", btn: navBtnDashboard, el: dashboardView },
+      { name: "methodology", btn: navBtnMethodology, el: methodologyView }
+    ];
+
+    views.forEach(v => {
+      if (v.btn) v.btn.classList.toggle("active", v.name === viewName);
+      if (v.el) {
+        v.el.style.display = v.name === viewName ? "block" : "none";
+        v.el.classList.toggle("active", v.name === viewName);
+      }
+    });
+
     if (viewName === "map") {
-      navBtnMap.classList.add("active");
-      navBtnDashboard.classList.remove("active");
-      mapView.style.display = "block";
-      dashboardView.style.display = "none";
       mapManager.invalidateSize();
+      requestAnimationFrame(() => {
+        mapManager.resize();
+      });
+      setTimeout(() => {
+        mapManager.resize();
+      }, 150);
     } else if (viewName === "dashboard") {
-      navBtnDashboard.classList.add("active");
-      navBtnMap.classList.remove("active");
-      mapView.style.display = "none";
-      dashboardView.style.display = "block";
       dashboardViewInstance.loadAnalyses();
     }
+  }
+
+  // Make available globally
+  window.switchPrimaryView = switchPrimaryView;
+
+  if (navBtnAbout) {
+    navBtnAbout.addEventListener("click", () => switchPrimaryView("about"));
   }
 
   if (navBtnMap) {
@@ -534,8 +558,71 @@ document.addEventListener("DOMContentLoaded", () => {
     navBtnDashboard.addEventListener("click", () => switchPrimaryView("dashboard"));
   }
 
+  if (navBtnMethodology) {
+    navBtnMethodology.addEventListener("click", () => switchPrimaryView("methodology"));
+  }
+
   if (btnDashboardBackMap) {
     btnDashboardBackMap.addEventListener("click", () => switchPrimaryView("map"));
+  }
+
+  if (btnMethodologyBackMap) {
+    btnMethodologyBackMap.addEventListener("click", () => switchPrimaryView("map"));
+  }
+
+  // Brand block click navigates to About landing page
+  const brandBlock = document.querySelector(".brand-block");
+  if (brandBlock) {
+    brandBlock.style.cursor = "pointer";
+    brandBlock.addEventListener("click", () => switchPrimaryView("about"));
+  }
+
+  // About Page Interactive CTAs
+  const btnHeroLaunchMap = document.getElementById("btn-hero-launch-map");
+  if (btnHeroLaunchMap) {
+    btnHeroLaunchMap.addEventListener("click", () => switchPrimaryView("map"));
+  }
+
+  const btnHeroMethodology = document.getElementById("btn-hero-methodology");
+  if (btnHeroMethodology) {
+    btnHeroMethodology.addEventListener("click", () => switchPrimaryView("methodology"));
+  }
+
+  const btnBannerLaunchMap = document.getElementById("btn-banner-launch-map");
+  if (btnBannerLaunchMap) {
+    btnBannerLaunchMap.addEventListener("click", () => switchPrimaryView("map"));
+  }
+
+  const btnBannerMethodology = document.getElementById("btn-banner-methodology");
+  if (btnBannerMethodology) {
+    btnBannerMethodology.addEventListener("click", () => switchPrimaryView("methodology"));
+  }
+
+  // Capability Card Pill Buttons
+  document.querySelectorAll(".btn-card-action[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.getAttribute("data-action");
+      if (action) switchPrimaryView(action);
+    });
+  });
+
+  // About Section Anchor Navigation
+  document.querySelectorAll(".anchor-btn[data-target]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-target");
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  });
+
+  // Ensure "Draw AOI" toolbar button switches to map view if clicked from About/Methodology/Dashboard
+  const btnDrawAoiToolbar = document.getElementById("btn-draw-polygon");
+  if (btnDrawAoiToolbar) {
+    btnDrawAoiToolbar.addEventListener("click", () => {
+      switchPrimaryView("map");
+    });
   }
 
   // ======================================================================
@@ -739,7 +826,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (aboutModal) aboutModal.style.display = "none";
   };
 
-  if (navBtnMethodology) navBtnMethodology.addEventListener("click", openModal);
+  // Legacy modal close listeners
   if (btnCloseAbout) btnCloseAbout.addEventListener("click", closeModal);
   if (btnModalDismiss) btnModalDismiss.addEventListener("click", closeModal);
 
@@ -754,4 +841,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // ======================================================================
+  // 12. Application Initialization: Default to About Landing Page
+  // ======================================================================
+  switchPrimaryView("about");
 });
