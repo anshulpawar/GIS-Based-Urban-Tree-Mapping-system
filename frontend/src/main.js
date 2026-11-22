@@ -530,6 +530,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // Contextually display navbar action tools only on MAP and DASHBOARD views
+    const navbarActions = document.querySelector(".navbar-actions");
+    if (navbarActions) {
+      if (viewName === "about" || viewName === "methodology") {
+        navbarActions.style.display = "none";
+      } else {
+        navbarActions.style.display = "flex";
+      }
+    }
+
     if (viewName === "map") {
       mapManager.invalidateSize();
       requestAnimationFrame(() => {

@@ -219,6 +219,8 @@ body {
 
   white-space: nowrap;
 
+  padding-right: 16px;
+
 }
 
 
@@ -383,9 +385,11 @@ body {
 
   align-items: center;
 
-  gap: 10px;
+  gap: 8px;
 
-  padding-right: 14px;
+  padding-right: 0;
+
+  flex-shrink: 0;
 
   white-space: nowrap;
 
@@ -411,9 +415,9 @@ body {
 
   gap: 6px;
 
-  width: 260px;
+  width: 220px;
 
-  max-width: 26vw;
+  max-width: 18vw;
 
   flex-shrink: 1;
 
@@ -563,7 +567,7 @@ body {
 
   align-items: center;
 
-  gap: 6px;
+  gap: 8px;
 
   white-space: nowrap;
 
@@ -583,11 +587,11 @@ body {
 
   height: 32px;
 
-  padding: 0 11px;
+  padding: 0 12px;
 
   border-radius: var(--radius-sm);
 
-  font-size: 12px;
+  font-size: 11.5px;
 
   font-weight: 600;
 
@@ -596,6 +600,8 @@ body {
   display: inline-flex;
 
   align-items: center;
+
+  justify-content: center;
 
   gap: 6px;
 
