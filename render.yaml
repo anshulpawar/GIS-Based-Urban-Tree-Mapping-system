@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: urban-greenwatch-api
+    name: gis-based-urban-tree-mapping-system
     runtime: python
     region: oregon
     plan: free
@@ -11,7 +11,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: ALLOWED_ORIGINS
-        value: "*"
+        value: "https://gis-based-urban-tree-mapping-system.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173"
       - key: GEE_PROJECT_ID
         value: urban-tree-mapping
       - key: GEMINI_MODEL

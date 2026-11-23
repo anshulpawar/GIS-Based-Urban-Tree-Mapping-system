@@ -21,10 +21,13 @@ export function resolveApiBaseUrl() {
   }
 
   // 1. Explicit runtime override (set in frontend/config.js or injected by host)
+  // When running locally, ignore default production URL so local dev works seamlessly with 127.0.0.1:8000
   const runtimeOverride = window.UGW_API_URL || (window.__ENV__ && window.__ENV__.API_URL);
   if (runtimeOverride && typeof runtimeOverride === "string" && runtimeOverride.trim()) {
     const trimmed = runtimeOverride.trim().replace(/\/+$/, "");
-    return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+    if (!IS_LOCAL || window.UGW_FORCE_REMOTE || trimmed !== DEFAULT_PROD_API_URL.replace(/\/+$/, "")) {
+      return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+    }
   }
 
   // 2. Local development fallback
