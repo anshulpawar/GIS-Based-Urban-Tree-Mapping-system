@@ -5,7 +5,7 @@
  */
 
 // Production Render backend URL (overridable via window.UGW_API_URL in frontend/config.js)
-const DEFAULT_PROD_API_URL = "https://urban-greenwatch-api.onrender.com";
+const DEFAULT_PROD_API_URL = "https://gis-based-urban-tree-mapping-system.onrender.com";
 
 function isLocalEnvironment() {
   if (typeof window === "undefined" || !window.location) return true;
